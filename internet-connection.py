@@ -42,7 +42,7 @@ class InternetConnectionPlugin(plugins.Plugin):
 
     def on_ui_update(self, ui):
         if ui.is_wavehare35lcd():
-            ip = os.popen('ifconfig eth0 | grep inet | awk \'{print $2}\'').read()
+            ip = os.popen('ip addr show eth0 | grep "inet\b" | awk \'{print $2}\' | cut -d/ -f1').read()
             ui.set('connection_ip', ip)
         # check if there is an active Internet connection
         try:
