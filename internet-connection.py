@@ -19,9 +19,6 @@ class InternetConnectionPlugin(plugins.Plugin):
     __dependencies__ = {
         'pip': ['scapy']
     }
-    __defaults__ = {
-        'enabled': True,
-    }
 
     def on_loaded(self):
         logging.info("[Internet-Connection] plugin loaded.")

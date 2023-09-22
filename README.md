@@ -3,7 +3,7 @@ Custom plugin repository
 
 Edit your `/etc/pwnagotchi/config.toml` to look like this
 
-```
+```TOML
 main.custom_plugin_repos = [
     "https://github.com/jayofelony/pwnagotchi-torch-plugins/archive/master.zip",
     "https://github.com/evilsocket/pwnagotchi-plugins-contrib/archive/master.zip"
@@ -19,7 +19,7 @@ Run the following command to install BtS
 
 Add the following lines to your `/etc/pwnagotchi.config.toml`
 
-``` 
+```TOML
 main.plugins.bluetoothsniffer.enabled = true
 main.plugins.bluetoothsniffer.timer = 45 # On how may seconds to scan for bluetooth devices
 main.plugins.bluetoothsniffer.devices_file = "/root/handshakes/bluetooth_devices.json"  # Path to the JSON file with bluetooth devices
@@ -35,7 +35,9 @@ Run the following command to install Internet-Connection
 
 Add the following line to your `/etc/pwnagotchi/config.toml`
 
-`main.plugins.internet-connection.enabled = true`
+```TOML
+main.plugins.internet-connection.enabled = true
+```
 
 # Memtemp-Plus
 Run the following command to install Memtemp-Plus
@@ -44,11 +46,23 @@ Run the following command to install Memtemp-Plus
 
 Add the following lines to your `/etc/pwnagotchi/config.toml`
 
-```angular2html
+```TOML
 main.plugins.memtemp-plus.enabled = true
 main.plugins.memtemp-plus.scale = "celsius"  # options are celsius, fahrenheit, kelvin
 main.plugins.memtemp-plus.orientation = "vertical"  # options are vertical or horizontal
 main.plugins.memtemp-plus.fields = "mem,cpu,temp,freq"  # you can change order
 main.plugins.memtemp-plus.position = "200,70"
 main.plugins.memtemp-plus.linespacing = 12
+```
+
+# Show_Pwd
+Run the following command to install Show_Pwd
+
+`sudo pwnagotchi plugins install show_pwd`
+
+Add the following lines to your `/etc/pwnagotchi/config.toml`
+
+```TOML
+main.plugins.show_pwd.enabled = true
+main.plugins.show_pwd.orientation = "horizontal"  # options are horizontal or vertical
 ```
