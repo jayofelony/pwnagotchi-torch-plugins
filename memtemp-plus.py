@@ -88,7 +88,7 @@ class MemTempPlus(plugins.Plugin):
             # Set position based on screen type
             if ui.is_waveshare_v2():
                 v_pos = (197, 70)
-                h_pos = (178, 80)
+                h_pos = (175, 85)
             else:
                 v_pos = (175, 50)
                 h_pos = (155, 60)
