@@ -4,11 +4,10 @@ import pwnagotchi.ui.fonts as fonts
 import pwnagotchi.plugins as plugins
 import logging
 import os
-import socket
 
 
 class InternetConnectionPlugin(plugins.Plugin):
-    __author__ = 'adi1708, edited by jayofelony'
+    __author__ = '@jayofelony'
     __version__ = '1.2'
     __license__ = 'GPL3'
     __description__ = 'A plugin that displays the Internet connection status on the pwnagotchi display.'
@@ -27,30 +26,24 @@ class InternetConnectionPlugin(plugins.Plugin):
         if ui.is_waveshare35lcd():
             v_pos = (280, 61)
             with ui._lock:
-                ui.add_element('connection_ip', LabeledValue(color=BLACK, label='eth0:', value='',
+                ui.add_element('connection_ip', LabeledValue(color=BLACK, label='eth0: ', value='',
                                                              position=v_pos, label_font=fonts.Bold,
                                                              text_font=fonts.Small))
         with ui._lock:
             # add a LabeledValue element to the UI with the given label and value
             # the position and font can also be specified
-            ui.add_element('connection_status', LabeledValue(color=BLACK, label='WWW', value='-',
+            ui.add_element('connection_status', LabeledValue(color=BLACK, label='WWW ', value='D',
                                                              position=(ui.width() / 2 - 35, 0),
                                                              label_font=fonts.Bold, text_font=fonts.Medium))
+
+    def on_internet_available(self, agent):
+        display = agent.view()
+        display.set('connection_status', 'C')
 
     def on_ui_update(self, ui):
         if ui.is_wavehare35lcd():
             ip = os.popen('ip addr show eth0 | grep "inet\b" | awk \'{print $2}\' | cut -d/ -f1').read()
             ui.set('connection_ip', ip)
-        # check if there is an active Internet connection
-        try:
-            # Connect to the host - tells us if the host is actually reachable
-            socket.create_connection(("1.1.1.1", 80), 2).close()
-            ui.set('connection_status', 'C')
-        except TimeoutError as err:
-            # if the command failed, it means there is no active Internet connection
-            # we could log the error, but no need really
-            # logging.error('[Internet-Connection] Socket creation failed: %s' % err)
-            ui.set('connection_status', 'D')
 
     def on_unload(self, ui):
         with ui._lock:
