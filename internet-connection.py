@@ -23,13 +23,13 @@ class InternetConnectionPlugin(plugins.Plugin):
         logging.info("[Internet-Connection] plugin loaded.")
 
     def on_ui_setup(self, ui):
-        if ui.is_waveshare35lcd():
-            v_pos = (280, 61)
-            with ui._lock:
+        with ui._lock:
+            if ui.is_waveshare35lcd():
+                v_pos = (280, 61)
                 ui.add_element('connection_ip', LabeledValue(color=BLACK, label='eth0: ', value='',
                                                              position=v_pos, label_font=fonts.Bold,
                                                              text_font=fonts.Small))
-        with ui._lock:
+
             # add a LabeledValue element to the UI with the given label and value
             # the position and font can also be specified
             ui.add_element('connection_status', LabeledValue(color=BLACK, label='WWW ', value='D',
