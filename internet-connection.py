@@ -26,13 +26,13 @@ class InternetConnectionPlugin(plugins.Plugin):
         with ui._lock:
             if ui.is_waveshare35lcd():
                 v_pos = (280, 61)
-                ui.add_element('connection_ip', LabeledValue(color=BLACK, label='eth0: ', value='',
+                ui.add_element('connection_ip', LabeledValue(color=BLACK, label='eth0:', value='',
                                                              position=v_pos, label_font=fonts.Bold,
                                                              text_font=fonts.Small))
 
             # add a LabeledValue element to the UI with the given label and value
             # the position and font can also be specified
-            ui.add_element('connection_status', LabeledValue(color=BLACK, label='WWW ', value='D',
+            ui.add_element('connection_status', LabeledValue(color=BLACK, label='WWW', value='D',
                                                              position=(ui.width() / 2 - 35, 0),
                                                              label_font=fonts.Bold, text_font=fonts.Medium))
 
