@@ -39,10 +39,12 @@ class InternetConnectionPlugin(plugins.Plugin):
     def on_internet_available(self, agent):
         display = agent.view()
         display.set('connection_status', 'C')
+        logging.info('[Internet-Connection] connected to the World Wide Web!')
 
     def on_ui_update(self, ui):
         if ui.is_wavehare35lcd():
-            ip = os.popen('ip addr show eth0 | grep "inet\b" | awk \'{print $2}\' | cut -d/ -f1').read()
+            logging.info('[Internet-Connection] eth0 was found ..')
+            ip = os.popen('ifconfig wlp2s0 | grep -w "inet" | awk \'{print $2}\'').read()
             ui.set('connection_ip', ip)
 
     def on_unload(self, ui):
