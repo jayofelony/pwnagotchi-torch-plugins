@@ -3,7 +3,7 @@ from pwnagotchi.ui.view import BLACK
 import pwnagotchi.ui.fonts as fonts
 import pwnagotchi.plugins as plugins
 import logging
-import os
+import subprocess
 
 
 class InternetConnectionPlugin(plugins.Plugin):
@@ -44,8 +44,10 @@ class InternetConnectionPlugin(plugins.Plugin):
     def on_ui_update(self, ui):
         if ui.is_wavehare35lcd():
             logging.info('[Internet-Connection] eth0 was found ...')
-            ip = os.popen('ifconfig eth0 | grep -w "inet" | awk \'{print $2}\'').read()
-            ui.set('connection_ip', ip)
+            eth0ip = subprocess.getoutput("ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -1")
+            eth0ip = eth0ip if "Device \"eth0\" does not exist." not in eth0ip and eth0ip.strip() != '' else 'Disconnected'
+            if eth0ip != 'Disconnected':
+                ui.set('connection_ip', f'eth0: {eth0ip}')
 
     def on_unload(self, ui):
         with ui._lock:

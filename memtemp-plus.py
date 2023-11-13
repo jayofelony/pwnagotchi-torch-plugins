@@ -27,7 +27,7 @@ class MemTempPlus(plugins.Plugin):
         'temp': 'cpu_temp',
         'freq': 'cpu_freq',
     }
-    DEFAULT_FIELDS = ['mem', 'cpu', 'temp','freq'] #enables 4 by default
+    DEFAULT_FIELDS = ['mem', 'cpu', 'temp', 'freq']  # enables 4 by default
     LINE_SPACING = 12
     LABEL_SPACING = 0
     FIELD_WIDTH = 4
