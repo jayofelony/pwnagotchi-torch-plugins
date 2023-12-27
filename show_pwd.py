@@ -1,4 +1,4 @@
-from pwnagotchi.ui.components import LabeledValue
+from pwnagotchi.ui.components import LabeledValue, Text
 from pwnagotchi.ui.view import BLACK
 import pwnagotchi.ui.fonts as fonts
 import pwnagotchi.plugins as plugins
@@ -17,14 +17,12 @@ class ShowPwd(plugins.Plugin):
         logging.info("show_pwd loaded")
 
     def on_ui_setup(self, ui):
-        h_pos = (0, 91)
-        v_pos = (180, 61)
         if self.options['orientation'] == "vertical":
-            ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=v_pos,
+            ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=(180, 61),
                                                     label_font=fonts.Bold, text_font=fonts.Small))
         else:
             # default to horizontal
-            ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=h_pos,
+            ui.add_element('show_pwd', Text(color=BLACK, label='', value='', position=(0, 91),
                                                     label_font=fonts.Bold, text_font=fonts.Small))
 
     def on_unload(self, ui):
