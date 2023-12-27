@@ -17,6 +17,8 @@ class ShowPwd(plugins.Plugin):
         logging.info("show_pwd loaded")
 
     def on_ui_setup(self, ui):
+        h_pos = (0, 91)
+        v_pos = (180, 61)
         if self.options['orientation'] == "vertical":
             ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=v_pos,
                                                     label_font=fonts.Bold, text_font=fonts.Small))
