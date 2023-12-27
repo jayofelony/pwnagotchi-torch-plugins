@@ -12,20 +12,14 @@ class ShowPwd(plugins.Plugin):
     __name__ = "Show Pwd"
     __license__ = 'GPL3'
     __description__ = 'A plugin to display recently cracked passwords'
-    __dependencies__ = {
-        'pip': ['scapy']
-    }
 
     def on_loaded(self):
         logging.info("show_pwd loaded")
 
     def on_ui_setup(self, ui):
-        if ui.is_waveshare_v2():
+        if ui.is_waveshare_v1() or ui.is_waveshare_v2 or ui.is_waveshare_v3 or ui.is_waveshare_v4:
             h_pos = (0, 95)
             v_pos = (180, 61)
-        elif ui.is_waveshare_v1():
-            h_pos = (0, 95)
-            v_pos = (170, 61)
         elif ui.is_waveshare144lcd():
             h_pos = (0, 92)
             v_pos = (78, 67)
@@ -54,5 +48,6 @@ class ShowPwd(plugins.Plugin):
             ui.remove_element('show_pwd')
 
     def on_ui_update(self, ui):
-        last_line = os.popen('tail -n 1 /root/handshakes/wpa-sec.cracked.potfile | awk -F: \'{print $3 " - " $4}\'').read().rstrip()
+        last_line = os.popen('tail -n 1 /root/handshakes/wpa-sec.cracked.potfile | awk -F: \'{print $3 " - " $4}\'')
+        last_line = last_line.read().rstrip()
         ui.set('show_pwd', "%s" % last_line)
