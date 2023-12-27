@@ -9,7 +9,6 @@ import os
 class ShowPwd(plugins.Plugin):
     __author__ = '@nagy_craig'
     __version__ = '1.0.0'
-    __name__ = "Show Pwd"
     __license__ = 'GPL3'
     __description__ = 'A plugin to display recently cracked passwords'
 
