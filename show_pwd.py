@@ -22,7 +22,7 @@ class ShowPwd(plugins.Plugin):
                                                     label_font=fonts.Bold, text_font=fonts.Small))
         else:
             # default to horizontal
-            ui.add_element('show_pwd', Text(color=BLACK, label='', value='', position=(0, 91),
+            ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=(0, 91),
                                             label_font=fonts.Bold, text_font=fonts.Small))
 
     def on_unload(self, ui):
