@@ -17,21 +17,6 @@ class ShowPwd(plugins.Plugin):
         logging.info("show_pwd loaded")
 
     def on_ui_setup(self, ui):
-        if ui.is_waveshare_v1() or ui.is_waveshare_v2 or ui.is_waveshare_v3 or ui.is_waveshare_v4:
-            h_pos = (0, 95)
-            v_pos = (180, 61)
-        elif ui.is_waveshare144lcd():
-            h_pos = (0, 92)
-            v_pos = (78, 67)
-        elif ui.is_inky():
-            h_pos = (0, 83)
-            v_pos = (165, 54)
-        elif ui.is_waveshare27inch():
-            h_pos = (0, 153)
-            v_pos = (216, 122)
-        else:
-            h_pos = (0, 91)
-            v_pos = (180, 61)
         if self.options['orientation'] == "vertical":
             ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=v_pos,
                                                     label_font=fonts.Bold, text_font=fonts.Small))
