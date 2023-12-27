@@ -32,18 +32,16 @@ class ShowPwd(plugins.Plugin):
         else:
             h_pos = (0, 91)
             v_pos = (180, 61)
-        with ui._lock:
-            if self.options['orientation'] == "vertical":
-                ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=v_pos,
-                                                        label_font=fonts.Bold, text_font=fonts.Small))
-            else:
-                # default to horizontal
-                ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=h_pos,
-                                                        label_font=fonts.Bold, text_font=fonts.Small))
+        if self.options['orientation'] == "vertical":
+            ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=v_pos,
+                                                    label_font=fonts.Bold, text_font=fonts.Small))
+        else:
+            # default to horizontal
+            ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=h_pos,
+                                                    label_font=fonts.Bold, text_font=fonts.Small))
 
     def on_unload(self, ui):
-        with ui._lock:
-            ui.remove_element('show_pwd')
+        ui.remove_element('show_pwd')
 
     def on_ui_update(self, ui):
         last_line = os.popen('tail -n 1 /root/handshakes/wpa-sec.cracked.potfile | awk -F: \'{print $3 " - " $4}\'')
