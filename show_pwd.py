@@ -32,14 +32,12 @@ class ShowPwd(plugins.Plugin):
         else:
             h_pos = (0, 91)
             v_pos = (180, 61)
-
-        if self.options['orientation'] == "vertical":
-            with ui._lock:
+        with ui._lock:
+            if self.options['orientation'] == "vertical":
                 ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=v_pos,
                                                         label_font=fonts.Bold, text_font=fonts.Small))
-        else:
-            # default to horizontal
-            with ui._lock:
+            else:
+                # default to horizontal
                 ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=h_pos,
                                                         label_font=fonts.Bold, text_font=fonts.Small))
 
