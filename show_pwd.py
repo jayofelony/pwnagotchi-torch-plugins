@@ -1,4 +1,4 @@
-from pwnagotchi.ui.components import LabeledValue, Text
+from pwnagotchi.ui.components import LabeledValue
 from pwnagotchi.ui.view import BLACK
 import pwnagotchi.ui.fonts as fonts
 import pwnagotchi.plugins as plugins
