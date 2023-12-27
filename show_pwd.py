@@ -41,7 +41,8 @@ class ShowPwd(plugins.Plugin):
                                                     label_font=fonts.Bold, text_font=fonts.Small))
 
     def on_unload(self, ui):
-        ui.remove_element('show_pwd')
+        with ui._lock:
+            ui.remove_element('show_pwd')
 
     def on_ui_update(self, ui):
         last_line = os.popen('tail -n 1 /root/handshakes/wpa-sec.cracked.potfile | awk -F: \'{print $3 " - " $4}\'')
