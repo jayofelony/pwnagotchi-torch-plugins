@@ -15,9 +15,6 @@ class InternetConnectionPlugin(plugins.Plugin):
     __help__ = """
     A plugin that displays the Internet connection status on the pwnagotchi display.
     """
-    __dependencies__ = {
-        'pip': ['scapy']
-    }
 
     def on_loaded(self):
         logging.info("[Internet-Connection] plugin loaded.")
