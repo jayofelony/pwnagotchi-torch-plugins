@@ -32,6 +32,9 @@ class MemTempPlus(plugins.Plugin):
     LABEL_SPACING = 0
     FIELD_WIDTH = 4
 
+    def __init__(self):
+        self.options = dict()
+
     def on_loaded(self):
         logging.info('memtemp plugin loaded.')
 

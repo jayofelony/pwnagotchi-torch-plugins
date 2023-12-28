@@ -13,8 +13,13 @@ class ShowPwd(plugins.Plugin):
     __license__ = 'GPL3'
     __description__ = 'A plugin to display recently cracked passwords'
 
+    def __init__(self):
+        self.options = dict()
+
     def on_loaded(self):
         logging.info("show_pwd loaded")
+        if not self.options['orientation']:
+            self.options['orientation'] = 'horizontal'
 
     def on_ui_setup(self, ui):
         if self.options['orientation'] == "vertical":
