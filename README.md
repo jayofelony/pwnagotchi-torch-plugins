@@ -50,7 +50,7 @@ Add the following lines to your `/etc/pwnagotchi/config.toml`
 main.plugins.memtemp-plus.enabled = true
 main.plugins.memtemp-plus.scale = "celsius"  # options are celsius, fahrenheit, kelvin
 main.plugins.memtemp-plus.orientation = "vertical"  # options are vertical or horizontal
-main.plugins.memtemp-plus.fields = "mem,cpu,temp,freq"  # you can change order
+main.plugins.memtemp-plus.fields = ["mem,cpu,temp,freq"]  # you can change order
 main.plugins.memtemp-plus.position = "200,70"
 main.plugins.memtemp-plus.linespacing = 12
 ```
