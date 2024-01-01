@@ -149,8 +149,8 @@ class MemTempPlus(plugins.Plugin):
     def on_ui_update(self, ui):
         if self.options['orientation'] == 'vertical':
             for idx, field in enumerate(self.fields):
-                ui.set(f'memtemp_{field}', getattr(self, self.ALLOWED_FIELDS[field]))
+                ui.set(f'memtemp_{field}', getattr(self, self.ALLOWED_FIELDS[field])())
         else:
             # default to horizontal
-            data = ' '.join([self.pad_text(getattr(self, self.ALLOWED_FIELDS[x])) for x in self.fields])
+            data = ' '.join([self.pad_text(getattr(self, self.ALLOWED_FIELDS[x])()) for x in self.fields])
             ui.set('memtemp_data', data)
