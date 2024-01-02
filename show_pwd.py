@@ -7,8 +7,8 @@ import os
 
 
 class ShowPwd(plugins.Plugin):
-    __author__ = '@nagy_craig'
-    __version__ = '1.0.0'
+    __author__ = '@jayofelony'
+    __version__ = '1.0.1'
     __name__ = "Show Pwd"
     __license__ = 'GPL3'
     __description__ = 'A plugin to display recently cracked passwords'
@@ -18,7 +18,7 @@ class ShowPwd(plugins.Plugin):
 
     def on_loaded(self):
         logging.info("show_pwd loaded")
-        if not self.options['orientation']:
+        if 'orientation' not in self.options:
             self.options['orientation'] = 'horizontal'
 
     def on_ui_setup(self, ui):
