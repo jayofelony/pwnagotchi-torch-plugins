@@ -35,6 +35,6 @@ class ShowPwd(plugins.Plugin):
             ui.remove_element('show_pwd')
 
     def on_ui_update(self, ui):
-        last_line = os.popen('tail -n 1 /root/handshakes/wpa-sec.cracked.potfile | awk -F: \'{print $3 " - " $4}\'')
+        last_line = os.popen('awk -F: \'!seen[$3]++ {print $3 " - " $4}\' /root/handshakes/wpa-sec.cracked.potfile | tail -n 1')
         last_line = last_line.read().rstrip()
         ui.set('show_pwd', "%s" % last_line)
