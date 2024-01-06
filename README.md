@@ -13,6 +13,8 @@ Then run this command: `sudo pwnagotchi plugins update`
 
 
 # Bluetooth-Sniffer
+**Warning: This might not work with bt-tether enabled.**
+
 Run the following command to install BtS
 
 `sudo pwnagotchi plugins install bluetoothsniffer`
