@@ -6,7 +6,6 @@ Edit your `/etc/pwnagotchi/config.toml` to look like this
 ```TOML
 main.custom_plugin_repos = [
     "https://github.com/jayofelony/pwnagotchi-torch-plugins/archive/master.zip",
-    "https://github.com/evilsocket/pwnagotchi-plugins-contrib/archive/master.zip"
     ]
 ```
 Then run this command: `sudo pwnagotchi plugins update`
