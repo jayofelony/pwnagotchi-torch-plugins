@@ -420,6 +420,5 @@ class gpsdeasy(plugins.Plugin):
                     return self.generatePolarPlot(self.gpsd.get_current("sky"))
 
             except Exception as e:
-                logging.warning("webhook err: %s" % repr(err))
-                return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % repr(
-                    err)
+                logging.warning("webhook err: %s" % repr(e))
+                return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % repr(e)
