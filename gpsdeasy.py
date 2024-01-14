@@ -323,7 +323,7 @@ class gpsdeasy(plugins.Plugin):
     def on_unload(self, ui):
         logging.info("[gpsdeasy] bettercap gps reporting disabled")
         try:
-            agent.run("gps off")
+            self.agent.run("gps off")
         except Exception:
             logging.info(f"[gpsdeasy] bettercap gps was already off")
 
