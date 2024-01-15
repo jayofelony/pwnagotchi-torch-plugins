@@ -37,6 +37,7 @@ import logging
 
 import socket
 
+import requests
 
 import pwnagotchi.plugins as plugins
 import pwnagotchi.ui.fonts as fonts
@@ -123,7 +124,7 @@ class GPSD:
 
 class gpsdeasy(plugins.Plugin):
     __author__ = "discord@rai68"
-    __version__ = "1.2.1"
+    __version__ = "1.2.3"
     __license__ = "LGPL"
     __description__ = "uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging"
 
@@ -162,55 +163,53 @@ class gpsdeasy(plugins.Plugin):
                 subprocess.run(['apt','install','-y','gpsd','gpsd-clients'])
             else:
                 logging.error('[gpsdeasy] GPSd not installed, no internet. Please connect and reload pwnagotchi')
-         
+                return False
+                
+        logging.info('[gpsdeasy] GPSd should be installed')
         baseConf = [
-            'GPSD_OPTIONS="-n -N -b"',
-            f'BAUDRATE="{self.baud}"',
-            f'MAIN_GPS="{self.device}"',
-            f'PPS_DEVICES="{self.pps_device}"',
-            'GPSD_SOCKET="/var/run/gpsd.sock"',
-            '/bin/stty -F ${MAIN_GPS} ${BAUDRATE}',
-            '/bin/setserial ${MAIN_GPS} low_latency'
+            'GPSD_OPTIONS="-n -N -b"\n',
+            f'BAUDRATE="{self.baud}"\n',
+            f'MAIN_GPS="{self.device}"\n',
+            f'PPS_DEVICES="{self.pps_device}"\n',
+            'GPSD_SOCKET="/var/run/gpsd.sock"\n',
+            '/bin/stty -F ${MAIN_GPS} ${BAUDRATE}\n',
+            '/bin/setserial ${MAIN_GPS} low_latency\n'
         ]
         baseService = [
-            '[Unit]',
-            'Description=GPS (Global Positioning System) Daemon for pwnagotchi',
-            'Requires=gpsd.socket',
-            '[Service]',
-            'EnvironmentFile=/etc/default/gpsd',
-            'ExecStart=/usr/sbin/gpsd $GPSD_OPTIONS $MAIN_GPS $PPS_DEVICES',
-            '[Install]',
-            'WantedBy=multi-user.target',
-            'Also=gpsd.socket',
+            '[Unit]\n',
+            'Description=GPS (Global Positioning System) Daemon for pwnagotchi\n',
+            'Requires=gpsd.socket\n',
+            '[Service]\n',
+            'EnvironmentFile=/etc/default/gpsd\n',
+            'ExecStart=/usr/sbin/gpsd $GPSD_OPTIONS $MAIN_GPS $PPS_DEVICES\n',
+            '[Install]\n',
+            'WantedBy=multi-user.target\n',
+            'Also=gpsd.socket\n',
         ]
-        changed = False
-        with open("/etc/default/gpsd",'r+', newline="\n") as gpsdConf:
-            fileLines = gpsdService.readlines()
+        
+        logging.info("[gpsdeasy] Updating systemd configs if changed")
+        with open("/etc/default/gpsd",'a+', newline="\n") as gpsdConf:
+            fileLines = gpsdConf.readlines()
+            changed = False
             changed = baseConf != fileLines
-            logging.info(baseService)
-            logging.info(fileLines)
-            if changed is True:
+            if changed:
                 gpsdConf.seek(0)
                 gpsdConf.truncate()
                 for line in baseConf:
-                    line += '\n'
                     gpsdConf.write(line)
-                    changed = True
                     
-        with open("/etc/systemd/system/gpsd.service",'r+', newline="\n") as gpsdService:
+        subprocess.run(['touch','/etc/systemd/system/gpsd.service'])
+        with open("/etc/systemd/system/gpsd.service",'a+', newline="\n") as gpsdService:
             fileLines = gpsdService.readlines()
+            changed = False
             changed = baseService != fileLines
-            logging.info(baseService)
-            logging.info(fileLines)
-            if changed is True:
+            if changed:
                 gpsdService.seek(0)
                 gpsdService.truncate()
                 for line in baseService:
-                    line += '\n'
                     gpsdService.write(line)
-                    changed = True
                     
-                
+        logging.info(f"[gpsdeasy] finished updating configs, Updated: {changed}")
         if changed:
             subprocess.run(["systemctl", "stop","gpsd.service"])
             subprocess.run(["systemctl", "daemon-reload"])
@@ -219,11 +218,13 @@ class gpsdeasy(plugins.Plugin):
         serRes = subprocess.run(['systemctl', "status","gpsd.service"],stdout = subprocess.PIPE,stderr = subprocess.STDOUT,universal_newlines = True)
         if 'active (running)' not in serRes.stdout:
             subprocess.run(["systemctl", "start","gpsd.service"])
+        return True
 
 
 
     def on_loaded(self):
         #gpsd host:port
+        logging.info("[gpsdeasy] plugin loading begin")
         if 'host' in self.options:
             self.host = self.options['host']
             
@@ -243,8 +244,9 @@ class gpsdeasy(plugins.Plugin):
         if 'pps_device' in self.options:
             self.pps_device = self.options['pps_device']
             
-            
-        self.setup()
+        logging.debug("[gpsdeasy] starting major setup function")
+        res = self.setup()
+        logging.debug("[gpsdeasy] ended major setup function, status: {res}")
         #starts gpsd after setting up
         self.gpsd = GPSD(self.host, self.port, self)
         
@@ -276,7 +278,7 @@ class gpsdeasy(plugins.Plugin):
         else: 
             BLACK = 0xFF
         self.loaded = True
-        logging.info("[gpsdeasy] plugin loaded")
+        logging.info("[gpsdeasy] plugin loading finished!")
 
     def on_ready(self, agent):
         while self.loaded == False:
@@ -332,6 +334,7 @@ class gpsdeasy(plugins.Plugin):
                     label_spacing=label_spacing,
                 ),
             )
+        logging.info(f"[gpsdeasy] done setting up UI elements: {self.fields}")
         self.ui_setup = True
 
     def on_unload(self, ui):
@@ -348,7 +351,7 @@ class gpsdeasy(plugins.Plugin):
                 try:
                     ui.remove_element(element)
                 except:
-                    logging.error("[gpsdeasy] Element would not be removed skipping")
+                    logging.warning("[gpsdeasy] Element would not be removed skipping")
                     pass
                 
         logging.info("[gpsdeasy] plugin disabled")
@@ -535,6 +538,9 @@ class gpsdeasy(plugins.Plugin):
                     logging.debug(polarImage)
                     if polarImage == None:
                         return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % "Error forming sat data"
+                    if self.loaded is False:
+                        return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % "Plugin not loaded try again soon"
+                    
                     
                     html = [
                         '<html><head><title>GPSD Easy: Sky View</title><meta name="csrf_token" content="{{ csrf_token() }}">',
