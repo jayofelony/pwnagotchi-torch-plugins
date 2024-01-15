@@ -42,6 +42,7 @@ import requests
 import pwnagotchi.plugins as plugins
 import pwnagotchi.ui.fonts as fonts
 from pwnagotchi.ui.components import LabeledValue
+from pwnagotchi.ui.view import BLACK
 
 import pwnagotchi
 
@@ -124,7 +125,7 @@ class GPSD:
 
 class gpsdeasy(plugins.Plugin):
     __author__ = "discord@rai68"
-    __version__ = "1.2.5"
+    __version__ = "1.2.7"
     __license__ = "LGPL"
     __description__ = "uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging"
 
@@ -143,6 +144,12 @@ class gpsdeasy(plugins.Plugin):
         self.loaded = False
         self.ui_setup = False
         self.valid_device = False
+        
+        
+        #display setup
+        self._black = 0x00
+        
+        
         
         self.pps_device=''
         self.device = ''
@@ -271,11 +278,9 @@ class gpsdeasy(plugins.Plugin):
         
 
         
-        global BLACK
-        if 'invert' in pwnagotchi.config['ui'] and pwnagotchi.config['ui']['invert'] == 1:
-            BLACK = 0xFF
-        else: 
-            BLACK = 0x00
+        if 'invert' in pwnagotchi.config['ui'] and pwnagotchi.config['ui']['invert'] == 1 or BLACK == 0xFF:
+            self._black = 0xFF
+
         self.loaded = True
         logging.info("[gpsdeasy] plugin loading finished!")
 
@@ -324,7 +329,7 @@ class gpsdeasy(plugins.Plugin):
             ui.add_element(
                 item,
                 LabeledValue(
-                    color=BLACK,
+                    color=self._black,
                     label=f"{item}:",
                     value="-",
                     position=pos,
