@@ -124,7 +124,7 @@ class GPSD:
 
 class gpsdeasy(plugins.Plugin):
     __author__ = "discord@rai68"
-    __version__ = "1.2.4"
+    __version__ = "1.2.5"
     __license__ = "LGPL"
     __description__ = "uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging"
 
@@ -188,30 +188,29 @@ class gpsdeasy(plugins.Plugin):
         ]
         
         logging.info("[gpsdeasy] Updating autoconfig if changed")
-        with open("/etc/default/gpsd",'a+', newline="\n") as gpsdConf:
-            fileLines = gpsdConf.readlines()
-            changed = False
-            changed = baseConf != fileLines
-            if changed:
+        with open("/etc/default/gpsd", 'a+', newline="\n") as gpsdConf:
+            fileLinesConf = gpsdConf.readlines()
+            changedConf = baseConf != fileLinesConf
+            if changedConf:
                 gpsdConf.seek(0)
                 gpsdConf.truncate()
                 for line in baseConf:
                     gpsdConf.write(line)
-                    
 
-        with open("/etc/systemd/system/gpsd.service",'a+', newline="\n") as gpsdService:
-            fileLines = gpsdService.readlines()
-            changed = False
-            changed = baseService != fileLines
-            if changed:
+        with open("/etc/systemd/system/gpsd.service", 'a+', newline="\n") as gpsdService:
+            fileLinesService = gpsdService.readlines()
+            changedService = baseService != fileLinesService
+            if changedService:
                 gpsdService.seek(0)
                 gpsdService.truncate()
                 for line in baseService:
                     gpsdService.write(line)
-                    
+
+        changed = changedConf or changedService
         logging.info(f"[gpsdeasy] finished updating configs, Updated: {changed}")
+
         if changed:
-            subprocess.run(["systemctl", "stop","gpsd.service"])
+            subprocess.run(["systemctl", "stop", "gpsd.service"])
             subprocess.run(["systemctl", "daemon-reload"])
 
 
@@ -274,9 +273,9 @@ class gpsdeasy(plugins.Plugin):
         
         global BLACK
         if 'invert' in pwnagotchi.config['ui'] and pwnagotchi.config['ui']['invert'] == 1:
-            BLACK = 0x00
-        else: 
             BLACK = 0xFF
+        else: 
+            BLACK = 0x00
         self.loaded = True
         logging.info("[gpsdeasy] plugin loading finished!")
 
