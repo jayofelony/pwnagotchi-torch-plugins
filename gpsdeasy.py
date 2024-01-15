@@ -124,7 +124,7 @@ class GPSD:
 
 class gpsdeasy(plugins.Plugin):
     __author__ = "discord@rai68"
-    __version__ = "1.2.3"
+    __version__ = "1.2.4"
     __license__ = "LGPL"
     __description__ = "uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging"
 
@@ -187,7 +187,7 @@ class gpsdeasy(plugins.Plugin):
             'Also=gpsd.socket\n',
         ]
         
-        logging.info("[gpsdeasy] Updating systemd configs if changed")
+        logging.info("[gpsdeasy] Updating autoconfig if changed")
         with open("/etc/default/gpsd",'a+', newline="\n") as gpsdConf:
             fileLines = gpsdConf.readlines()
             changed = False
@@ -198,7 +198,7 @@ class gpsdeasy(plugins.Plugin):
                 for line in baseConf:
                     gpsdConf.write(line)
                     
-        subprocess.run(['touch','/etc/systemd/system/gpsd.service'])
+
         with open("/etc/systemd/system/gpsd.service",'a+', newline="\n") as gpsdService:
             fileLines = gpsdService.readlines()
             changed = False
@@ -533,13 +533,14 @@ class gpsdeasy(plugins.Plugin):
             try:
                 logging.debug(path)
                 if path is None:
+                    if self.loaded is False:
+                        return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % "Plugin not loaded try again soon"
                     #root get
                     polarImage = self.generatePolarPlot(self.gpsd.get_current("sky"))
                     logging.debug(polarImage)
                     if polarImage == None:
                         return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % "Error forming sat data"
-                    if self.loaded is False:
-                        return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % "Plugin not loaded try again soon"
+
                     
                     
                     html = [
