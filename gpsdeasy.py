@@ -4,16 +4,12 @@
 #* How to install gpsd with PPS time syncing (requires a non USB GPS that has a PPS pin, but will give you sub microsecond time accuracy (1.000_0##_###s))
 #
 # to be written
-#
-#
-#
-#
 
 #* example config
-# | 
 # | main.plugins.gpsdeasy.enabled = true
 # | main.plugins.gpsdeasy.host = '127.0.0.1'
 # | main.plugins.gpsdeasy.port = 2947
+# | main.plugins.gpsdeasy.device = '/dev/ttyS0' #<-- change to serial port of device
 # | main.plugins.gpsdeasy.fields = ['fix','lat','lon','alt','speed'] #<-- Any order or amount, you can also use custom values from POLL.TPV; on gpsd documents (https://gpsd.gitlab.io/gpsd/gpsd_json.html#_tpv)
 # | main.plugins.gpsdeasy.speedUnit = 'kph' or 'mph'
 # | main.plugins.gpsdeasy.distanceUnit = 'm' or 'ft'
