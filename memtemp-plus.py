@@ -17,7 +17,7 @@ from pwnagotchi.ui.view import BLACK
 
 class MemTempPlus(plugins.Plugin):
     __author__ = 'https://github.com/xenDE'
-    __version__ = '1.0.2-1'
+    __version__ = '1.0.3'
     __license__ = 'GPL3'
     __description__ = 'A plugin that will display memory/cpu usage and temperature'
 
