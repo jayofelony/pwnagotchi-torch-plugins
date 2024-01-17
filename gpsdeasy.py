@@ -271,10 +271,10 @@ class gpsdeasy(plugins.Plugin):
             self.distanceUnit = self.options['distanceUnit']
 
         if 'topleft_x' in self.options:
-            self.distanceUnit = self.options['topleft_x']
+            self.element_pos_x = self.options['topleft_x']
             
         if 'topleft_y' in self.options:
-            self.distanceUnit = self.options['topleft_y']
+            self.element_pos_y = self.options['topleft_y']
         
 
         
