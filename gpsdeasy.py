@@ -121,7 +121,7 @@ class GPSD:
 
 class gpsdeasy(plugins.Plugin):
     __author__ = "discord@rai68"
-    __version__ = "1.2.8"
+    __version__ = "1.2.9"
     __license__ = "LGPL"
     __description__ = "uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging"
 
@@ -161,7 +161,7 @@ class gpsdeasy(plugins.Plugin):
         
         aptRes = subprocess.run(['apt','-qq','list','gpsd'],stdout = subprocess.PIPE,stderr = subprocess.STDOUT,universal_newlines = True)
         if 'installed' not in aptRes.stdout:
-            logging.info('[gpsdeasy] GPSd not installed, trying now')
+            logging.info('[gpsdeasy] GPSd not installed, trying now. This may take up to 5minutes just let me run')
             if is_connected():
                 subprocess.run(['apt','install','-y','gpsd','gpsd-clients'])
             else:
