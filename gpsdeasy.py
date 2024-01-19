@@ -296,7 +296,12 @@ class gpsdeasy(plugins.Plugin):
             logging.info("[gpsdeasy] bettercap set and on")
             self.running = True
         else:
-            logging.warning("[gpsdeasy] bettercap gps reporting disabled")
+            try:
+                agent.run("gps off")
+            except Exception:
+                logging.info(f"[gpsdeasy] bettercap gps was already off")
+                pass
+            logging.info("[gpsdeasy] bettercap gps reporting disabled")
 
     def on_handshake(self, agent, filename, access_point, client_station):
         coords = self.gpsd.get_current('tpv')
