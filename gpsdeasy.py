@@ -121,7 +121,7 @@ class GPSD:
 
 class gpsdeasy(plugins.Plugin):
     __author__ = "discord@rai68"
-    __version__ = "1.2.9"
+    __version__ = "1.3.0"
     __license__ = "LGPL"
     __description__ = "uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging"
 
@@ -304,7 +304,10 @@ class gpsdeasy(plugins.Plugin):
             gps_filename = filename.replace(".pcap", ".gps.json")
             logging.info(f"[gpsdeasy] saving GPS to {gps_filename} ({coords})")
             with open(gps_filename, "w+t") as fp:
-                json.dump(coords, fp)
+                struct = {}
+                struct['Longitude'] = coords['lon']
+                struct['Latitude'] = coords['lat']
+                json.dump(struct, fp)
         else:
             logging.info("[gpsdeasy] not saving GPS: no fix")
 
