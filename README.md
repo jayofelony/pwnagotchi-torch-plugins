@@ -85,7 +85,7 @@ main.plugins.gpsdeasy.baud = 9600 #<--- change to fit yuor device
 ```
 ### Optional, below values are defaults if not specified
 ```
-main.plugins.gpsdeasy.fields = ['fix','lat','lon','alt','speed'] #<-- Any order or amount, you can also use custom values from POLL.TPV; on gpsd documents (https://gpsd.gitlab.io/gpsd/gpsd_json.html#_tpv)
+main.plugins.gpsdeasy.fields = ['fix','lat','lon','alt','spd'] #<-- Any order or amount, you can also use custom values from POLL.TPV; on gpsd documents (https://gpsd.gitlab.io/gpsd/gpsd_json.html#_tpv)
 main.plugins.gpsdeasy.speedUnit = 'kph' #or 'mph' or 'ms' #(m/s)
 main.plugins.gpsdeasy.distanceUnit = 'm' #or 'ft'
 main.plugins.gpsdeasy.bettercap = true #<--- report to bettercap
