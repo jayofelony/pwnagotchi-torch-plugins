@@ -147,10 +147,11 @@ class Gpsdeasy(plugins.Plugin):
         
         # auto setup
         self.disableAuto = False
+        self.mode = "server"
 
     def setup(self):
         # will run every load but only finish once if services haven't been set up.
-        if self.disableAuto is True:
+        if self.disableAuto is True or self.mode == 'client':
             return True
         
         aptRes = subprocess.run(['apt', '-qq', 'list', 'gpsd'],
@@ -184,6 +185,18 @@ class Gpsdeasy(plugins.Plugin):
             'WantedBy=multi-user.target\n',
             'Also=gpsd.socket\n',
         ]
+        baseSocket = [
+            '[Unit]\n',
+            'Description=GPS (Global Positioning System) Daemon Sockets\n',
+            '[Socket]\n',
+            'ListenStream=/run/gpsd.sock\n',
+            'ListenStream=[::]:2947\n',
+            'ListenStream=0.0.0.0:2947\n',
+            'SocketMode=0600\n',
+            'BindIPv6Only=yes\n',
+            '[Install]\n',
+            'WantedBy=sockets.target]\n'
+            ]
         
         logging.info("[gpsdeasy] Updating autoconfig if changed")
         with open("/etc/default/gpsd", 'a+', newline="\n") as gpsdConf:
@@ -203,12 +216,21 @@ class Gpsdeasy(plugins.Plugin):
                 gpsdService.truncate()
                 for line in baseService:
                     gpsdService.write(line)
+                    
+        with open("/lib/systemd/system/gpsd.socket", 'a+', newline="\n") as gpsdSocket:
+            fileLinesSocket = gpsdSocket.readlines()
+            changedSocket = baseSocket != fileLinesSocket
+            if changedSocket:
+                gpsdSocket.seek(0)
+                gpsdSocket.truncate()
+                for line in baseSocket:
+                    gpsdSocket.write(line)
 
         changed = changedConf or changedService
         logging.info(f"[gpsdeasy] finished updating configs, Updated: {changed}")
 
         if changed:
-            subprocess.run(["systemctl", "stop", "gpsd.service"])
+            subprocess.run(["systemctl", "stop", "gpsd.service", "gpsd.socket"])
             subprocess.run(["systemctl", "daemon-reload"])
 
         serRes = subprocess.run(['systemctl', "status","gpsd.service"],stdout = subprocess.PIPE,stderr = subprocess.STDOUT,universal_newlines = True)
@@ -228,6 +250,9 @@ class Gpsdeasy(plugins.Plugin):
         #auto setup variables
         if 'disableAutoSetup' in self.options:
             self.disableAuto = self.options['disableAutoSetup']
+            
+        if 'mode' in self.options:
+            self.mode = self.options['mode']
             
         if 'baud' in self.options:
             self.baud = self.options['baud']
@@ -442,7 +467,7 @@ class Gpsdeasy(plugins.Plugin):
                     if self.speedUnit == 'kph':
                         displayUnit = 'km/h'
                     elif self.speedUnit == 'mph':
-                        displayUnit = 'mi/h'
+                        displayUnit = 'mph'
                     elif self.speedUnit == 'ms':
                         displayUnit = 'm/s'
                     else:
