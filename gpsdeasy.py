@@ -10,10 +10,12 @@
 # | main.plugins.gpsdeasy.host = '127.0.0.1'
 # | main.plugins.gpsdeasy.port = 2947
 # | main.plugins.gpsdeasy.device = '/dev/ttyS0' #<-- change to serial port of device
-# | main.plugins.gpsdeasy.fields = ['fix','lat','lon','alt','speed'] #<-- Any order or amount, you can also use custom values from POLL.TPV; on gpsd documents (https://gpsd.gitlab.io/gpsd/gpsd_json.html#_tpv)
-# | main.plugins.gpsdeasy.speedUnit = 'kph' or 'mph'
-# | main.plugins.gpsdeasy.distanceUnit = 'm' or 'ft'
+# | main.plugins.gpsdeasy.fields = ['fix','lat','lon','alt','spd'] #<-- Any order or amount, you can also use custom values from POLL.TPV; on gpsd documents (https://gpsd.gitlab.io/gpsd/gpsd_json.html#_tpv)
+# | main.plugins.gpsdeasy.speedUnit = 'kph' #or 'mph'
+# | main.plugins.gpsdeasy.distanceUnit = 'm' #or 'ft'
 # | main.plugins.gpsdeasy.bettercap = true #<--- report to bettercap
+# | main.plugins.gpsdeasy.auto = True #or False , false allows manual setup of gpsd, only use false if you know what you are doing. 
+# | main.plugins.gpsdeasy.mode = 'server' #or 'peer' , peer allows you to have one pwnagotchi as a server and others as peers that get gps from a single usb. 
 
 import numpy as np
 import base64
@@ -117,7 +119,7 @@ class GPSD:
 
 class Gpsdeasy(plugins.Plugin):
     __author__ = "discord@rai68"
-    __version__ = "1.3.1"
+    __version__ = "1.3.2"
     __license__ = "LGPL"
     __description__ = "uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging"
 
