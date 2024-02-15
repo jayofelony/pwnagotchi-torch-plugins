@@ -146,12 +146,12 @@ class Gpsdeasy(plugins.Plugin):
         self.baud = 9600
         
         # auto setup
-        self.auto = True
+        self.disableAuto = False
 
     def setup(self):
         # will run every load but only finish once if services haven't been set up.
-        if self.auto is False:
-            return
+        if self.disableAuto is True:
+            return True
         
         aptRes = subprocess.run(['apt', '-qq', 'list', 'gpsd'],
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
@@ -227,7 +227,7 @@ class Gpsdeasy(plugins.Plugin):
         
         #auto setup variables
         if 'disableAutoSetup' in self.options:
-            self.auto = self.options['disableAutoSetup']
+            self.disableAuto = self.options['disableAutoSetup']
             
         if 'baud' in self.options:
             self.baud = self.options['baud']
