@@ -75,8 +75,8 @@ class GPSD:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect((host, port))
             self.stream = self.socket.makefile(mode="rw")
-        except:
-            logging.warning("[gpseasy] error occured during socket setup, try power cycle the device")
+        except Exception as e:
+            logging.warning(f"[gpseasy] error occured during socket setup, try power cycle the device. Err was: {e}")
 
         self.stream.write('?WATCH={"enable":true}\n')
         self.stream.flush()
@@ -117,7 +117,7 @@ class GPSD:
 
 class Gpsdeasy(plugins.Plugin):
     __author__ = "discord@rai68"
-    __version__ = "1.3.0"
+    __version__ = "1.3.1"
     __license__ = "LGPL"
     __description__ = "uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging"
 
