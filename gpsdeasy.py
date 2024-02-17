@@ -383,6 +383,11 @@ class Gpsdeasy(plugins.Plugin):
     def on_ui_update(self, ui):
         if self.ui_setup is False:
             return
+        #needs testing
+        #data = self.agent.run("gps.show")
+        #if "latitude" not in data:
+        #    logging.info("bettercap gps may have been turned off, trying to toggle it now")
+        #    self.agent.run("gps on")
         
         coords = self.gpsd.get_current('tpv')
         if coords is None:
