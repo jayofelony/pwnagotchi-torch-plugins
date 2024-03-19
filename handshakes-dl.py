@@ -95,6 +95,6 @@ class HandshakesDL(plugins.Plugin):
             dir = self.config['bettercap']['handshakes']
             try:
                 logging.info(f"[HandshakesDL] serving {dir}/{path}.pcap")
-                return send_from_directory(directory=dir, filename=path+'.pcap', as_attachment=True)
+                return send_from_directory(directory=dir, path=path+'.pcap', as_attachment=True)
             except FileNotFoundError:
                 abort(404)
