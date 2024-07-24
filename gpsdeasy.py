@@ -462,9 +462,9 @@ class Gpsdeasy(plugins.Plugin):
                 try:
                     if 'speed' in coords:
                         if self.speedUnit == 'kph':
-                            coords['speed'] == coords['speed'] * 3.6
+                            coords['speed'] = coords['speed'] * 3.6
                         elif self.speedUnit == 'mph':
-                            coords['speed'] == coords['speed'] * 2.237
+                            coords['speed'] = coords['speed'] * 2.237
                         else:
                             coords['speed']
                         
