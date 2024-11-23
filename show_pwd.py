@@ -5,9 +5,8 @@ import pwnagotchi.plugins as plugins
 import logging
 import os
 
-
 class ShowPwd(plugins.Plugin):
-    __author__ = '@jayofelony'
+    __author__ = '@jayofelony - Modified by linton85'
     __version__ = '1.0.1'
     __name__ = "Show Pwd"
     __license__ = 'GPL3'
@@ -18,23 +17,33 @@ class ShowPwd(plugins.Plugin):
 
     def on_loaded(self):
         logging.info("show_pwd loaded")
-        if 'orientation' not in self.options:
-            self.options['orientation'] = 'horizontal'
 
     def on_ui_setup(self, ui):
-        if self.options['orientation'] == "vertical":
-            ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=(180, 61),
-                                                    label_font=fonts.Bold, text_font=fonts.Small))
-        else:
-            # default to horizontal
-            ui.add_element('show_pwd', LabeledValue(color=BLACK, label='', value='', position=(0, 91),
-                                                    label_font=fonts.Bold, text_font=fonts.Small))
+        # Setup for horizontal orientation with adjustable positions
+        x_position = 121  # X position for both SSID and password
+        ssid_y_position = 62  # Y position for SSID
+        password_y_offset = 12  # Y offset for password from SSID
+
+        ssid_position = (x_position, ssid_y_position)
+        password_position = (x_position, ssid_y_position + password_y_offset)
+
+        ui.add_element('ssid', LabeledValue(color=BLACK, label='', value='', position=ssid_position,
+                                            label_font=fonts.Bold, text_font=fonts.Small))
+        ui.add_element('password', LabeledValue(color=BLACK, label='', value='', position=password_position,
+                                                label_font=fonts.Bold, text_font=fonts.Small))
 
     def on_unload(self, ui):
         with ui._lock:
-            ui.remove_element('show_pwd')
+            ui.remove_element('ssid')
+            ui.remove_element('password')
 
     def on_ui_update(self, ui):
         last_line = os.popen('awk -F: \'!seen[$3]++ {print $3 " - " $4}\' /root/handshakes/wpa-sec.cracked.potfile | tail -n 1')
         last_line = last_line.read().rstrip()
-        ui.set('show_pwd', "%s" % last_line)
+        if " - " in last_line:
+            ssid, password = last_line.split(" - ", 1)
+        else:
+            ssid = last_line
+            password = ""
+        ui.set('ssid', ssid)
+        ui.set('password', password)
