@@ -119,7 +119,7 @@ class GPSD:
 
 class Gpsdeasy(plugins.Plugin):
     __author__ = "discord@rai68"
-    __version__ = "1.3.2"
+    __version__ = "1.3.3"
     __license__ = "LGPL"
     __description__ = "uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging"
 
@@ -462,9 +462,9 @@ class Gpsdeasy(plugins.Plugin):
                 try:
                     if 'speed' in coords:
                         if self.speedUnit == 'kph':
-                            coords['speed'] == coords['speed'] * 3.6
+                            coords['speed'] = coords['speed'] * 3.6
                         elif self.speedUnit == 'mph':
-                            coords['speed'] == coords['speed'] * 2.237
+                            coords['speed'] = coords['speed'] * 2.237
                         else:
                             coords['speed']
                         

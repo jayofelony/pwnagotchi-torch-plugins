@@ -69,6 +69,8 @@ main.plugins.show_pwd.orientation = "horizontal"  # options are horizontal or ve
 ```
 
 # GPSdeasy
+
+## There is no reason to reboot during this installation, you may interrupt the apt install that is in the background and this will make your pi go bonk
  
 1. install the python file. 
 2. find the serial link of your GPS and its baudrate and add them to your config
