@@ -8,7 +8,7 @@ from pwnagotchi.ui.components import LabeledValue
 from pwnagotchi.ui.view import BLACK
 
 
-class GPS(plugins.Plugin):
+class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
     __version__ = "1.0.1"
     __license__ = "GPL3"
