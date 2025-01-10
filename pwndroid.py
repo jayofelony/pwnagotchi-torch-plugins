@@ -1,6 +1,7 @@
 import json
 import logging
 import requests
+import subprocess
 
 import pwnagotchi.plugins as plugins
 import pwnagotchi.ui.fonts as fonts
@@ -10,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.0.1"
+    __version__ = "1.0.2"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen. And make the BT tethering connection."
 
@@ -27,14 +28,10 @@ class PwnDroid(plugins.Plugin):
 
     def on_ready(self, agent):
         # Check connection to 192.168.44.1:4555
-        try:
-            response = requests.get("http://192.168.44.1:8080")
-            response.raise_for_status()
-            logging.info("Successfully connected to 192.168.44.1:8080")
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Failed to connect to 192.168.44.1:8080")
-            self.running = False
-        self.running = True
+        while True:
+            if (subprocess.run(['bluetoothctl', 'info'], capture_output=True, text=True)).stdout.find('Connected: yes') != -1:
+                self.running = True
+                return False
 
     def get_location_data(self, server_url):
         try:
