@@ -21,7 +21,6 @@ import numpy as np
 import base64
 import io
 
-from matplotlib.pyplot import rc, grid, figure, plot, rcParams, savefig, close
 from math import radians
 
 from flask import abort
@@ -119,7 +118,7 @@ class GPSD:
 
 class Gpsdeasy(plugins.Plugin):
     __author__ = "discord@rai68"
-    __version__ = "1.3.3"
+    __version__ = "1.3.4"
     __license__ = "LGPL"
     __description__ = "uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging"
 
@@ -550,33 +549,33 @@ class Gpsdeasy(plugins.Plugin):
             logging.error(e)
             return None
         
-    def on_webhook(self, path, request):
-        if request.method == "GET":
-            # all gets below
-            try:
-                logging.debug(path)
-                if path is None:
-                    if self.loaded is False:
-                        return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % "Plugin not loaded try again soon"
-                    # root get
-                    polarImage = self.generatePolarPlot(self.gpsd.get_current("sky"))
-                    logging.debug(polarImage)
-                    if polarImage is None:
-                        return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % "Error forming sat data"
+    # def on_webhook(self, path, request):
+    #     if request.method == "GET":
+    #         # all gets below
+    #         try:
+    #             logging.debug(path)
+    #             if path is None:
+    #                 if self.loaded is False:
+    #                     return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % "Plugin not loaded try again soon"
+    #                 # root get
+    #                 polarImage = self.generatePolarPlot(self.gpsd.get_current("sky"))
+    #                 logging.debug(polarImage)
+    #                 if polarImage is None:
+    #                     return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % "Error forming sat data"
 
-                    html = [
-                        '<html><head><title>GPSD Easy: Sky View</title><meta name="csrf_token" content="{{ csrf_token() }}">',
-                        '<script>document.getElementById("refreshPolar")?.addEventListener("click", async () => (await fetch(window.location.origin + "/plugins/gpsdeasy/getImage/polar")).ok && (document.getElementById("polarImage").src = "data:image/png;base64," + await (await fetch(window.location.origin + "/plugins/gpsdeasy/getImage/polar")).text()));</script>'
-                        '</head><body>',
-                        '<h1>Polar Image</h1>',
-                        f'<img id="polarImage" src="data:image/png;base64, {polarImage}"/>', 
-                        '<button id="refreshPolar">Refresh</button>',
-                        '</body></html>']
-                    return render_template_string(''.join(html))
+    #                 html = [
+    #                     '<html><head><title>GPSD Easy: Sky View</title><meta name="csrf_token" content="{{ csrf_token() }}">',
+    #                     '<script>document.getElementById("refreshPolar")?.addEventListener("click", async () => (await fetch(window.location.origin + "/plugins/gpsdeasy/getImage/polar")).ok && (document.getElementById("polarImage").src = "data:image/png;base64," + await (await fetch(window.location.origin + "/plugins/gpsdeasy/getImage/polar")).text()));</script>'
+    #                     '</head><body>',
+    #                     '<h1>Polar Image</h1>',
+    #                     f'<img id="polarImage" src="data:image/png;base64, {polarImage}"/>', 
+    #                     '<button id="refreshPolar">Refresh</button>',
+    #                     '</body></html>']
+    #                 return render_template_string(''.join(html))
                 
-                elif path == 'getImage/polar':
-                    return self.generatePolarPlot(self.gpsd.get_current("sky"))
+    #             elif path == 'getImage/polar':
+    #                 return self.generatePolarPlot(self.gpsd.get_current("sky"))
                 
-            except Exception as e:
-                logging.warning("webhook err: %s" % repr(e))
-                return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % repr(e)
+    #         except Exception as e:
+    #             logging.warning("webhook err: %s" % repr(e))
+    #             return "<html><head><title>GPSD Easy: Error</title></head><body><code>%s</code></body></html>" % repr(e)
