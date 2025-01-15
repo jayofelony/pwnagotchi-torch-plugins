@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.0.2"
+    __version__ = "1.0.3"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen. And make the BT tethering connection."
 
@@ -54,19 +54,19 @@ class PwnDroid(plugins.Plugin):
                 logging.info(f"Speed: {location_data['speed']}")
             else:
                 logging.info("Failed to retrieve location data.")
-            if self.running:
-                self.coordinates = location_data
-                gps_filename = filename.replace(".pcap", ".gps.json")
 
-                if self.coordinates and all([
-                    # avoid 0.000... measurements
-                    self.coordinates["latitude"], self.coordinates["longitude"]
-                ]):
-                    logging.info(f"saving GPS to {gps_filename} ({self.coordinates})")
-                    with open(gps_filename, "w+t") as fp:
-                        json.dump(self.coordinates, fp)
-                else:
-                    logging.info("[PwnDroid] not saving GPS. Couldn't find location.")
+            self.coordinates = location_data
+            gps_filename = filename.replace(".pcap", ".gps.json")
+
+            if self.coordinates and all([
+                # avoid 0.000... measurements
+                self.coordinates["latitude"], self.coordinates["longitude"]
+            ]):
+                logging.info(f"saving GPS to {gps_filename} ({self.coordinates})")
+                with open(gps_filename, "w+t") as fp:
+                    json.dump(self.coordinates, fp)
+            else:
+                logging.info("[PwnDroid] not saving GPS. Couldn't find location.")
 
     def on_ui_setup(self, ui):
         try:
@@ -135,14 +135,6 @@ class PwnDroid(plugins.Plugin):
     def on_ui_update(self, ui):
         if self.options['display']:
             with ui._lock:
-                server_url = f"http://192.168.44.1:8080"
-                self.coordinates = self.get_location_data(server_url)
-                if self.coordinates and all([
-                    # avoid 0.000... measurements
-                    self.coordinates["latitude"], self.coordinates["longitude"]
-                ]):
-                    # last char is sometimes not completely drawn ¯\_(ツ)_/¯
-                    # using an ending-whitespace as workaround on each line
-                    ui.set("latitude", f"{self.coordinates['latitude']:.4f} ")
-                    ui.set("longitude", f"{self.coordinates['longitude']:.4f} ")
-                    ui.set("altitude", f"{self.coordinates['altitude']:.1f}m ")
+                ui.set("latitude", f"{self.coordinates['latitude']:.4f} ")
+                ui.set("longitude", f"{self.coordinates['longitude']:.4f} ")
+                ui.set("altitude", f"{self.coordinates['altitude']:.1f}m ")
