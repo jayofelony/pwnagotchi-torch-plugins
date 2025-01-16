@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.0.3"
+    __version__ = "1.0.4"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen. And make the BT tethering connection."
 
@@ -135,6 +135,10 @@ class PwnDroid(plugins.Plugin):
     def on_ui_update(self, ui):
         if self.options['display']:
             with ui._lock:
-                ui.set("latitude", f"{self.coordinates['latitude']:.4f} ")
-                ui.set("longitude", f"{self.coordinates['longitude']:.4f} ")
-                ui.set("altitude", f"{self.coordinates['altitude']:.1f}m ")
+                if self.coordinates and all([
+                    # avoid 0.000... measurements
+                    self.coordinates["latitude"], self.coordinates["longitude"]
+                ]):
+                    ui.set("latitude", f"{self.coordinates['latitude']:.4f} ")
+                    ui.set("longitude", f"{self.coordinates['longitude']:.4f} ")
+                    ui.set("altitude", f"{self.coordinates['altitude']:.1f}m ")
