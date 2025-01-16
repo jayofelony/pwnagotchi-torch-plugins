@@ -13,7 +13,7 @@ class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
     __version__ = "1.0.4"
     __license__ = "GPL3"
-    __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen. And make the BT tethering connection."
+    __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen."
 
     LINE_SPACING = 10
     LABEL_SPACING = 0
