@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.0.4"
+    __version__ = "1.0.5"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen."
 
@@ -20,7 +20,7 @@ class PwnDroid(plugins.Plugin):
 
     def __init__(self):
         self.running = False
-        self.coordinates = None
+        self.coordinates = dict()
         self.options = dict()
 
     def on_loaded(self):
