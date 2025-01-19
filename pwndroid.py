@@ -87,54 +87,76 @@ class PwnDroid(plugins.Plugin):
             lat_pos = (pos[0] + 5, pos[1])
             lon_pos = (pos[0], pos[1] + line_spacing)
             alt_pos = (pos[0] + 5, pos[1] + (2 * line_spacing))
+            spd_pos = (pos[0], pos[1] + (3 * line_spacing))
         except Exception:
             # Set default value based on display type
             lat_pos = (127, 64)
             lon_pos = (127, 74)
             alt_pos = (127, 84)
-
-        ui.add_element(
-            "latitude",
-            LabeledValue(
-                color=BLACK,
-                label="lat:",
-                value="-",
-                position=lat_pos,
-                label_font=fonts.Small,
-                text_font=fonts.Small,
-                label_spacing=self.LABEL_SPACING,
-            ),
-        )
-        ui.add_element(
-            "longitude",
-            LabeledValue(
-                color=BLACK,
-                label="long:",
-                value="-",
-                position=lon_pos,
-                label_font=fonts.Small,
-                text_font=fonts.Small,
-                label_spacing=self.LABEL_SPACING,
-            ),
-        )
-        ui.add_element(
-            "altitude",
-            LabeledValue(
-                color=BLACK,
-                label="alt:",
-                value="-",
-                position=alt_pos,
-                label_font=fonts.Small,
-                text_font=fonts.Small,
-                label_spacing=self.LABEL_SPACING,
-            ),
-        )
+            spd_pos = (127, 94)
+        if self.options['lat']:
+            ui.add_element(
+                "latitude",
+                LabeledValue(
+                    color=BLACK,
+                    label="lat:",
+                    value="-",
+                    position=lat_pos,
+                    label_font=fonts.Small,
+                    text_font=fonts.Small,
+                    label_spacing=self.LABEL_SPACING,
+                ),
+            )
+        if self.options['long']:
+            ui.add_element(
+                "longitude",
+                LabeledValue(
+                    color=BLACK,
+                    label="long:",
+                    value="-",
+                    position=lon_pos,
+                    label_font=fonts.Small,
+                    text_font=fonts.Small,
+                    label_spacing=self.LABEL_SPACING,
+                ),
+            )
+        if self.options['alt']:
+            ui.add_element(
+                "altitude",
+                LabeledValue(
+                    color=BLACK,
+                    label="alt:",
+                    value="-",
+                    position=alt_pos,
+                    label_font=fonts.Small,
+                    text_font=fonts.Small,
+                    label_spacing=self.LABEL_SPACING,
+                ),
+            )
+        if self.options['spd']:
+            ui.add_element(
+                "speed",
+                LabeledValue(
+                    color=BLACK,
+                    label="spd:",
+                    value="-",
+                    position=spd_pos,
+                    label_font=fonts.Small,
+                    text_font=fonts.Small,
+                    label_spacing=self.LABEL_SPACING,
+                ),
+            )
 
     def on_unload(self, ui):
         with ui._lock:
-            ui.remove_element('latitude')
-            ui.remove_element('longitude')
-            ui.remove_element('altitude')
+            if self.options['lat']:
+                ui.remove_element('latitude')
+            if self.options['long']:
+                ui.remove_element('longitude')
+            if self.options['alt']:
+                ui.remove_element('altitude')
+            if self.options['spd']:
+                ui.remove_element('speed')
 
     def on_ui_update(self, ui):
         """Update the UI elements and fetch new coordinates if the interval has passed."""
@@ -154,6 +176,11 @@ class PwnDroid(plugins.Plugin):
                     # avoid 0.000... measurements
                     self.coordinates["latitude"], self.coordinates["longitude"]
                 ]):
-                    ui.set("latitude", f"{self.coordinates['latitude']:.4f} ")
-                    ui.set("longitude", f"{self.coordinates['longitude']:.4f} ")
-                    ui.set("altitude", f"{self.coordinates['altitude']:.1f}m ")
+                    if self.options['lat']:
+                        ui.set("latitude", f"{self.coordinates['latitude']:.4f} ")
+                    if self.options['long']:
+                        ui.set("longitude", f"{self.coordinates['longitude']:.4f} ")
+                    if self.options['alt']:
+                        ui.set("altitude", f"{self.coordinates['altitude']:.1f}m ")
+                    if self.options['spd']:
+                        ui.set("speed", f"{self.coordinates['speed']:.1f}m ")
