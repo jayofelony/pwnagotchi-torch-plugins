@@ -138,17 +138,17 @@ class PwnDroid(plugins.Plugin):
 
     def on_ui_update(self, ui):
         """Update the UI elements and fetch new coordinates if the interval has passed."""
-        current_time = time.time()
-        if self.running and current_time - self.last_update_time >= self.update_interval:
-            server_url = f"http://192.168.44.1:8080"
-            location_data = self.get_location_data(server_url)
-            if location_data:
-                self.coordinates = location_data
-                logging.info("[PwnDroid] Updated coordinates successfully.")
-            else:
-                logging.info("[PwnDroid] Failed to retrieve updated coordinates.")
-            self.last_update_time = current_time
         if self.options['display']:
+            current_time = time.time()
+            if self.running and current_time - self.last_update_time >= self.update_interval:
+                server_url = f"http://192.168.44.1:8080"
+                location_data = self.get_location_data(server_url)
+                if location_data:
+                    self.coordinates = location_data
+                    logging.info("[PwnDroid] Updated coordinates successfully.")
+                else:
+                    logging.info("[PwnDroid] Failed to retrieve updated coordinates.")
+                self.last_update_time = current_time
             with ui._lock:
                 if self.coordinates and all([
                     # avoid 0.000... measurements
