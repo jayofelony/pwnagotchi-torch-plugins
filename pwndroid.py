@@ -1,4 +1,5 @@
 import json
+import time
 import logging
 import requests
 import subprocess
@@ -22,6 +23,8 @@ class PwnDroid(plugins.Plugin):
         self.running = False
         self.coordinates = dict()
         self.options = dict()
+        self.last_update_time = 0
+        self.update_interval = 120
 
     def on_loaded(self):
         logging.info("[PwnDroid] Plugin loaded")
@@ -31,6 +34,7 @@ class PwnDroid(plugins.Plugin):
         while True:
             if (subprocess.run(['bluetoothctl', 'info'], capture_output=True, text=True)).stdout.find('Connected: yes') != -1:
                 self.running = True
+                self.last_update_time = time.time()
                 return False
 
     def get_location_data(self, server_url):
@@ -133,6 +137,17 @@ class PwnDroid(plugins.Plugin):
             ui.remove_element('altitude')
 
     def on_ui_update(self, ui):
+        """Update the UI elements and fetch new coordinates if the interval has passed."""
+        current_time = time.time()
+        if self.running and current_time - self.last_update_time >= self.update_interval:
+            server_url = f"http://192.168.44.1:8080"
+            location_data = self.get_location_data(server_url)
+            if location_data:
+                self.coordinates = location_data
+                logging.info("[PwnDroid] Updated coordinates successfully.")
+            else:
+                logging.info("[PwnDroid] Failed to retrieve updated coordinates.")
+            self.last_update_time = current_time
         if self.options['display']:
             with ui._lock:
                 if self.coordinates and all([
