@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.0.6"
+    __version__ = "1.0.7"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen."
 
@@ -91,43 +91,44 @@ class PwnDroid(plugins.Plugin):
             lat_pos = (127, 64)
             lon_pos = (127, 74)
             alt_pos = (127, 84)
-
-        ui.add_element(
-            "latitude",
-            LabeledValue(
-                color=BLACK,
-                label="lat:",
-                value="-",
-                position=lat_pos,
-                label_font=fonts.Small,
-                text_font=fonts.Small,
-                label_spacing=self.LABEL_SPACING,
-            ),
-        )
-        ui.add_element(
-            "longitude",
-            LabeledValue(
-                color=BLACK,
-                label="long:",
-                value="-",
-                position=lon_pos,
-                label_font=fonts.Small,
-                text_font=fonts.Small,
-                label_spacing=self.LABEL_SPACING,
-            ),
-        )
-        ui.add_element(
-            "altitude",
-            LabeledValue(
-                color=BLACK,
-                label="alt:",
-                value="-",
-                position=alt_pos,
-                label_font=fonts.Small,
-                text_font=fonts.Small,
-                label_spacing=self.LABEL_SPACING,
-            ),
-        )
+        if self.options['display']:
+            ui.add_element(
+                "latitude",
+                LabeledValue(
+                    color=BLACK,
+                    label="lat:",
+                    value="-",
+                    position=lat_pos,
+                    label_font=fonts.Small,
+                    text_font=fonts.Small,
+                    label_spacing=self.LABEL_SPACING,
+                ),
+            )
+            ui.add_element(
+                "longitude",
+                LabeledValue(
+                    color=BLACK,
+                    label="long:",
+                    value="-",
+                    position=lon_pos,
+                    label_font=fonts.Small,
+                    text_font=fonts.Small,
+                    label_spacing=self.LABEL_SPACING,
+                ),
+            )
+            if self.options['display_altitude']:
+                ui.add_element(
+                    "altitude",
+                    LabeledValue(
+                        color=BLACK,
+                        label="alt:",
+                        value="-",
+                        position=alt_pos,
+                        label_font=fonts.Small,
+                        text_font=fonts.Small,
+                        label_spacing=self.LABEL_SPACING,
+                    ),
+                )
 
     def on_unload(self, ui):
         with ui._lock:
