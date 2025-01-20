@@ -133,7 +133,7 @@ class PwnDroid(plugins.Plugin):
         with ui._lock:
             ui.remove_element('latitude')
             ui.remove_element('longitude')
-            ui.remove_element('lltitude')
+            ui.remove_element('altitude')
 
     def on_ui_update(self, ui):
         if self.options['display']:
