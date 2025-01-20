@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.0.5"
+    __version__ = "1.0.6"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen."
 
@@ -48,10 +48,12 @@ class PwnDroid(plugins.Plugin):
             location_data = self.get_location_data(server_url)
             if location_data:
                 logging.info("Location Data:")
-                logging.info(f"Latitude: {location_data['latitude']}")
-                logging.info(f"Longitude: {location_data['longitude']}")
-                logging.info(f"Altitude: {location_data['altitude']}")
-                logging.info(f"Speed: {location_data['speed']}")
+                logging.info(f"Latitude: {location_data['Latitude']}")
+                logging.info(f"Longitude: {location_data['Longitude']}")
+                logging.info(f"Altitude: {location_data['Altitude']}")
+                logging.info(f"Speed: {location_data['Speed']}")
+                logging.info(f"Accuracy: {location_data['Accuracy']}")
+                logging.info(f"Bearing: {location_data['Bearing']}")
             else:
                 logging.info("Failed to retrieve location data.")
 
@@ -60,7 +62,7 @@ class PwnDroid(plugins.Plugin):
 
             if self.coordinates and all([
                 # avoid 0.000... measurements
-                self.coordinates["latitude"], self.coordinates["longitude"]
+                self.coordinates["Latitude"], self.coordinates["Longitude"]
             ]):
                 logging.info(f"saving GPS to {gps_filename} ({self.coordinates})")
                 with open(gps_filename, "w+t") as fp:
@@ -72,8 +74,9 @@ class PwnDroid(plugins.Plugin):
         try:
             # Configure line_spacing
             line_spacing = int(self.options['linespacing'])
-        except Exception:
+        except Exception as e:
             # Set default value
+            logging.debug(f"[PwnDroid] Error on_ui_setup: {e}")
             line_spacing = self.LINE_SPACING
 
         try:
@@ -130,15 +133,16 @@ class PwnDroid(plugins.Plugin):
         with ui._lock:
             ui.remove_element('latitude')
             ui.remove_element('longitude')
-            ui.remove_element('altitude')
+            ui.remove_element('lltitude')
 
     def on_ui_update(self, ui):
         if self.options['display']:
             with ui._lock:
                 if self.coordinates and all([
                     # avoid 0.000... measurements
-                    self.coordinates["latitude"], self.coordinates["longitude"]
+                    self.coordinates["Latitude"], self.coordinates["Longitude"]
                 ]):
-                    ui.set("latitude", f"{self.coordinates['latitude']:.4f} ")
-                    ui.set("longitude", f"{self.coordinates['longitude']:.4f} ")
-                    ui.set("altitude", f"{self.coordinates['altitude']:.1f}m ")
+                    ui.set("latitude", f"{self.coordinates['Latitude']:.4f} ")
+                    ui.set("longitude", f"{self.coordinates['Longitude']:.4f} ")
+                    if self.options['display_altitude']:
+                        ui.set("altitude", f"{self.coordinates['Altitude']:.1f}m ")
