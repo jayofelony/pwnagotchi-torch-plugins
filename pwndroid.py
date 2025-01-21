@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.0.8"
+    __version__ = "1.0.9"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen."
 
@@ -159,7 +159,8 @@ class PwnDroid(plugins.Plugin):
         with ui._lock:
             ui.remove_element('latitude')
             ui.remove_element('longitude')
-            ui.remove_element('altitude')
+            if self.options['display_altitude']:
+                ui.remove_element('altitude')
 
     def on_ui_update(self, ui):
         if self.options['display']:
