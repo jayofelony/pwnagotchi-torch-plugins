@@ -1,7 +1,7 @@
 import json
 import logging
-import requests
-import subprocess
+import asyncio
+import websockets
 
 import pwnagotchi.plugins as plugins
 import pwnagotchi.ui.fonts as fonts
@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.0.9"
+    __version__ = "1.0.10"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen."
 
@@ -25,50 +25,63 @@ class PwnDroid(plugins.Plugin):
 
     def on_loaded(self):
         logging.info("[PwnDroid] Plugin loaded")
+        asyncio.run(self.start_fetching_location_data())
+        if self.message == "Connection established":
+            logging.info("[PwnDroid] Connection established")
 
-    def on_ready(self, agent):
-        # Check connection to 192.168.44.1:4555
+    async def start_fetching_location_data(self):
+        uri = "ws://192.168.44.1:8080"  # Replace with your WebSocket server URI
         while True:
-            if (subprocess.run(['bluetoothctl', 'info'], capture_output=True, text=True)).stdout.find('Connected: yes') != -1:
-                self.running = True
-                return False
+            try:
+                async with websockets.connect(uri) as websocket:
+                    while True:
+                        try:
+                            self.message = await websocket.recv()
+                            if self.message != "":  # Check if the message is not empty
+                                try:
+                                    self.coordinates = json.loads(self.message)
+                                except json.JSONDecodeError as e:
+                                    await asyncio.sleep(5)  # Retry after 5 seconds
+                                    self.coordinates = {}
+                            else:
+                                logging.error("Received empty message from WebSocket")
+                                await asyncio.sleep(5)  # Retry after 5 seconds
+                        except websockets.ConnectionClosed:
+                            break
+            except Exception as e:
+                logging.error(f"Connection error: {e}")
+                await asyncio.sleep(5)  # Retry after 5 seconds
 
-    def get_location_data(self, server_url):
-        try:
-            response = requests.get(server_url)
-            response.raise_for_status()  # Raise an exception for HTTP errors
-            return response.json()  # Parse the JSON response
-        except requests.exceptions.RequestException as e:
-            logging.warning(f"Error connecting to the server: {e}")
-            return None
+    async def on_handshake(self, agent, filename, access_point, client_station):
+        if self.coordinates:
+            logging.info("Location Data:")
+            logging.info(f"Latitude: {self.coordinates['Latitude']}")
+            logging.info(f"Longitude: {self.coordinates['Longitude']}")
+            logging.info(f"Altitude: {self.coordinates['Altitude']}")
+            logging.info(f"Speed: {self.coordinates['Speed']}")
+            logging.info(f"Accuracy: {self.coordinates['Accuracy']}")
+            logging.info(f"Bearing: {self.coordinates['Bearing']}")
 
-    def on_handshake(self, agent, filename, access_point, client_station):
-        if self.running:
-            server_url = f"http://192.168.44.1:8080"
-            location_data = self.get_location_data(server_url)
-            if location_data:
-                logging.info("Location Data:")
-                logging.info(f"Latitude: {location_data['Latitude']}")
-                logging.info(f"Longitude: {location_data['Longitude']}")
-                logging.info(f"Altitude: {location_data['Altitude']}")
-                logging.info(f"Speed: {location_data['Speed']}")
-                logging.info(f"Accuracy: {location_data['Accuracy']}")
-                logging.info(f"Bearing: {location_data['Bearing']}")
-            else:
-                logging.info("Failed to retrieve location data.")
-
-            self.coordinates = location_data
             gps_filename = filename.replace(".pcap", ".gps.json")
 
-            if self.coordinates and all([
+            if all([
                 # avoid 0.000... measurements
-                self.coordinates["Latitude"], self.coordinates["Longitude"]
+                self.coordinates.get("Latitude"), self.coordinates.get("Longitude")
             ]):
                 logging.info(f"saving GPS to {gps_filename} ({self.coordinates})")
                 with open(gps_filename, "w+t") as fp:
                     json.dump(self.coordinates, fp)
             else:
                 logging.info("[PwnDroid] not saving GPS. Couldn't find location.")
+
+            # Send a message back through the WebSocket
+            uri = "ws://192.168.44.1:8080"  # Replace with your WebSocket server URI
+            try:
+                async with websockets.connect(uri) as websocket:
+                    await websocket.send("New handshake")
+                    logging.info("[PwnDroid] Handshake message sent")
+            except Exception as e:
+                logging.error(f"Failed to send handshake message: {e}")
 
     def on_ui_setup(self, ui):
         try:
@@ -169,7 +182,7 @@ class PwnDroid(plugins.Plugin):
                     # avoid 0.000... measurements
                     self.coordinates["Latitude"], self.coordinates["Longitude"]
                 ]):
-                    ui.set("latitude", f"{self.coordinates['Latitude']:.4f} ")
-                    ui.set("longitude", f"{self.coordinates['Longitude']:.4f} ")
+                    ui.set("latitude", f"{self.coordinates['Latitude']} ")
+                    ui.set("longitude", f"{self.coordinates['Longitude']} ")
                     if self.options['display_altitude']:
                         ui.set("altitude", f"{self.coordinates['Altitude']:.1f}m ")
