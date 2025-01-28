@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.1.0"
+    __version__ = "1.1.001"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen."
 
@@ -22,6 +22,7 @@ class PwnDroid(plugins.Plugin):
         self.running = False
         self.coordinates = dict()
         self.options = dict()
+        self.websocket = None
 
     def on_loaded(self):
         logging.info("[PwnDroid] Plugin loaded")
@@ -34,6 +35,7 @@ class PwnDroid(plugins.Plugin):
         while True:
             try:
                 async with websockets.connect(uri) as websocket:
+                    self.websocket = websocket
                     while True:
                         try:
                             self.message = await websocket.recv()
@@ -52,6 +54,19 @@ class PwnDroid(plugins.Plugin):
                 logging.error(f"Connection error: {e}")
                 await asyncio.sleep(5)  # Retry after 5 seconds
 
+    async def close_websocket(self):
+        if self.websocket:
+            await self.websocket.close()
+            logging.info("[PwnDroid] WebSocket connection closed")
+
+    def on_unload(self, ui):
+        asyncio.run(self.close_websocket())
+        with ui._lock:
+            ui.remove_element('latitude')
+            ui.remove_element('longitude')
+            if self.options['display_altitude']:
+                ui.remove_element('altitude')
+
     async def on_handshake(self, agent, filename, access_point, client_station):
         if self.coordinates:
             logging.info("Location Data:")
@@ -64,10 +79,8 @@ class PwnDroid(plugins.Plugin):
 
             gps_filename = filename.replace(".pcap", ".gps.json")
 
-            if all([
-                # avoid 0.000... measurements
-                self.coordinates.get("Latitude"), self.coordinates.get("Longitude")
-            ]):
+            # avoid 0.000... measurements
+            if all([self.coordinates.get("Latitude"), self.coordinates.get("Longitude")]):
                 logging.info(f"saving GPS to {gps_filename} ({self.coordinates})")
                 with open(gps_filename, "w+t") as fp:
                     json.dump(self.coordinates, fp)
@@ -99,8 +112,9 @@ class PwnDroid(plugins.Plugin):
             lat_pos = (pos[0] + 5, pos[1])
             lon_pos = (pos[0], pos[1] + line_spacing)
             alt_pos = (pos[0] + 5, pos[1] + (2 * line_spacing))
-        except Exception:
+        except Exception as e:
             # Set default value based on display type
+            logging.debug(f"[PwnDroid] Error on_ui_setup: {e}")
             lat_pos = (127, 64)
             lon_pos = (127, 74)
             alt_pos = (127, 84)
@@ -167,13 +181,6 @@ class PwnDroid(plugins.Plugin):
                         label_spacing=self.LABEL_SPACING,
                     ),
                 )
-
-    def on_unload(self, ui):
-        with ui._lock:
-            ui.remove_element('latitude')
-            ui.remove_element('longitude')
-            if self.options['display_altitude']:
-                ui.remove_element('altitude')
 
     def on_ui_update(self, ui):
         if self.options['display']:
