@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.1.001"
+    __version__ = "1.1.002"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen."
 
@@ -69,7 +69,7 @@ class PwnDroid(plugins.Plugin):
             if self.options['display_altitude']:
                 ui.remove_element('altitude')
 
-    async def on_handshake(self, agent, filename, access_point, client_station):
+    def on_handshake(self, agent, filename, access_point, client_station):
         if self.coordinates:
             logging.info("Location Data:")
             logging.info(f"Latitude: {self.coordinates['Latitude']}")
@@ -88,15 +88,6 @@ class PwnDroid(plugins.Plugin):
                     json.dump(self.coordinates, fp)
             else:
                 logging.info("[PwnDroid] not saving GPS. Couldn't find location.")
-
-            # Send a message back through the WebSocket
-            uri = "ws://192.168.44.1:8080"  # Replace with your WebSocket server URI
-            try:
-                async with websockets.connect(uri) as websocket:
-                    await websocket.send("New handshake")
-                    logging.info("[PwnDroid] Handshake message sent")
-            except Exception as e:
-                logging.error(f"Failed to send handshake message: {e}")
 
     def on_ui_setup(self, ui):
         try:
