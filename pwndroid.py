@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.1.008"
+    __version__ = "1.1.003"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen."
 
@@ -28,8 +28,7 @@ class PwnDroid(plugins.Plugin):
     def on_loaded(self):
         self.running = True
         logging.info("[PwnDroid] Plugin loaded")
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.start_fetching_location_data())
+        asyncio.run(self.start_fetching_location_data())
         if self.message == "Connection established":
             logging.info("[PwnDroid] Connection established")
 
@@ -64,8 +63,7 @@ class PwnDroid(plugins.Plugin):
 
     def on_unload(self, ui):
         self.running = False
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.close_websocket())
+        asyncio.run(self.close_websocket())
         with ui._lock:
             ui.remove_element('latitude')
             ui.remove_element('longitude')
