@@ -63,7 +63,8 @@ class PwnDroid(plugins.Plugin):
 
     def on_unload(self, ui):
         self.running = False
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         loop.create_task(self.close_websocket())
         with ui._lock:
             ui.remove_element('latitude')
