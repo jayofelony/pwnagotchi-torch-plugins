@@ -28,7 +28,8 @@ class PwnDroid(plugins.Plugin):
     def on_loaded(self):
         self.running = True
         logging.info("[PwnDroid] Plugin loaded")
-        asyncio.run(self.start_fetching_location_data())
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.start_fetching_location_data())
         if self.message == "Connection established":
             logging.info("[PwnDroid] Connection established")
 
@@ -63,8 +64,7 @@ class PwnDroid(plugins.Plugin):
 
     def on_unload(self, ui):
         self.running = False
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        loop = asyncio.get_event_loop()
         loop.create_task(self.close_websocket())
         with ui._lock:
             ui.remove_element('latitude')
