@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.1.002"
+    __version__ = "1.1.008"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen."
 
@@ -23,6 +23,7 @@ class PwnDroid(plugins.Plugin):
         self.coordinates = dict()
         self.options = dict()
         self.websocket = None
+        self.handshake = bool()
 
     def on_loaded(self):
         self.running = True
@@ -62,7 +63,7 @@ class PwnDroid(plugins.Plugin):
 
     def on_unload(self, ui):
         self.running = False
-        asyncio.run(self.close_websocket())
+        asyncio.create_task(self.close_websocket())
         with ui._lock:
             ui.remove_element('latitude')
             ui.remove_element('longitude')
@@ -88,6 +89,15 @@ class PwnDroid(plugins.Plugin):
                     json.dump(self.coordinates, fp)
             else:
                 logging.info("[PwnDroid] not saving GPS. Couldn't find location.")
+            self.handshake = True
+            asyncio.run(self.send_message("New handshake", access_point))
+
+    async def send_message(self, message, ap):
+        while self.handshake:
+            if self.websocket:
+                await self.websocket.send(message)
+                logging.info(f"Sent message: {message}")
+                self.handshake = False
 
     def on_ui_setup(self, ui):
         try:
