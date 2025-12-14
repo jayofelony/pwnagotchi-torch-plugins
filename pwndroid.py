@@ -33,7 +33,8 @@ class PwnDroid(plugins.Plugin):
             logging.info("[PwnDroid] Connection established")
 
     async def start_fetching_location_data(self):
-        uri = "ws://192.168.44.1:8080"  # Replace with your WebSocket server URI
+        gateway = self.options.get("gateway", "192.168.44.1")
+        uri = f"ws://{gateway}:8080"  # Replace with your WebSocket server URI
         while True:
             try:
                 async with websockets.connect(uri) as websocket:
