@@ -17,7 +17,7 @@ from pwnagotchi.ui.view import BLACK
 
 class MemTempPlus(plugins.Plugin):
     __author__ = 'https://github.com/xenDE'
-    __version__ = '1.0.4'
+    __version__ = '1.0.5'
     __license__ = 'GPL3'
     __description__ = 'A plugin that will display memory/cpu usage and temperature'
 
@@ -37,7 +37,7 @@ class MemTempPlus(plugins.Plugin):
         self.fields = list(self.DEFAULT_FIELDS)
 
     def on_loaded(self):
-        logging.info('memtemp plugin loaded.')
+        logging.info('[MemTemp-Plus] loaded')
 
     def mem_usage(self):
         return f'{int(pwnagotchi.mem_usage() * 100)}%'
@@ -60,8 +60,11 @@ class MemTempPlus(plugins.Plugin):
         return f'{temp}{symbol}'
 
     def cpu_freq(self):
-        with open('/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq', 'rt') as fp:
-            return f'{round(float(fp.readline()) / 1000000, 1)}G'
+        try:
+            with open('/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq', 'rt') as fp:
+                return f'{round(float(fp.readline()) / 1000000, 1)}G'
+        except Exception:
+            return '?G'
 
     def pad_text(self, data):
         return ' ' * (self.FIELD_WIDTH - len(data)) + data
