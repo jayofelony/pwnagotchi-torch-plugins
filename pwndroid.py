@@ -11,7 +11,7 @@ from pwnagotchi.ui.view import BLACK
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.1.004"
+    __version__ = "1.1.009"
     __license__ = "GPL3"
     __description__ = "Plugin for the companion app PwnDroid to display GPS data on the Pwnagotchi screen."
 
@@ -24,22 +24,24 @@ class PwnDroid(plugins.Plugin):
         self.options = dict()
         self.websocket = None
         self.handshake = bool()
+        self.message = None
+        self.fetch_task = None
 
     def on_loaded(self):
         self.running = True
         logging.info("[PwnDroid] Plugin loaded")
-        asyncio.run(self.start_fetching_location_data())
-        if self.message == "Connection established":
-            logging.info("[PwnDroid] Connection established")
+        import threading
+        fetch_thread = threading.Thread(target=lambda: asyncio.run(self.start_fetching_location_data()), daemon=True)
+        fetch_thread.start()
 
     async def start_fetching_location_data(self):
         gateway = self.options.get("gateway", "192.168.44.1")
         uri = f"ws://{gateway}:8080"  # Replace with your WebSocket server URI
-        while True:
+        while self.running:
             try:
                 async with websockets.connect(uri) as websocket:
                     self.websocket = websocket
-                    while True:
+                    while self.running:
                         try:
                             self.message = await websocket.recv()
                             if self.message != "":  # Check if the message is not empty
@@ -66,10 +68,11 @@ class PwnDroid(plugins.Plugin):
         self.running = False
         asyncio.run(self.close_websocket())
         with ui._lock:
-            ui.remove_element('latitude')
-            ui.remove_element('longitude')
-            if self.options['display_altitude']:
-                ui.remove_element('altitude')
+            if self.options['display']:
+                ui.remove_element('latitude')
+                ui.remove_element('longitude')
+                if self.options['display_altitude']:
+                    ui.remove_element('altitude')
 
     def on_handshake(self, agent, filename, access_point, client_station):
         if self.coordinates:
@@ -197,3 +200,62 @@ class PwnDroid(plugins.Plugin):
                     ui.set("longitude", f"{self.coordinates['Longitude']} ")
                     if self.options['display_altitude']:
                         ui.set("altitude", f"{self.coordinates['Altitude']:.1f}m ")
+
+    def on_webhook(self, path, request):
+        """
+        Handle webhook requests. Expose handshakes data via /plugins/pwndroid/handshakes
+        """
+        if path.strip('/') == 'handshakes':
+            return self._get_handshakes_json()
+
+        return "OK"
+
+    def _get_handshakes_json(self):
+        """
+        Scan for captured handshakes and return them as JSON
+        """
+        import json
+        import os
+        from pathlib import Path
+
+        handshakes = []
+
+        # Look for PCAP files - they're typically stored in the pwd directory
+        pwd_dir = Path(self.agent.pwn.path) if hasattr(self.agent, 'pwn') else Path('/etc/pwnagotchi/handshakes')
+
+        try:
+            # Search for .pcap files and their corresponding .gps.json files
+            for pcap_file in pwd_dir.glob('**/*.pcap'):
+                try:
+                    gps_file = pcap_file.with_suffix('.gps.json')
+
+                    handshake_info = {
+                        'name': pcap_file.stem,
+                        'pcap_path': str(pcap_file),
+                        'created': pcap_file.stat().st_ctime,
+                        'size': pcap_file.stat().st_size,
+                        'gps': None
+                    }
+
+                    # Try to load GPS data if available
+                    if gps_file.exists():
+                        try:
+                            with open(gps_file, 'r') as f:
+                                handshake_info['gps'] = json.load(f)
+                        except Exception as e:
+                            pass
+
+                    handshakes.append(handshake_info)
+
+                except Exception as e:
+                    self.log(f"Error processing {pcap_file}: {e}")
+
+            # Sort by creation time, newest first
+            handshakes.sort(key=lambda x: x['created'], reverse=True)
+
+            return json.dumps({'handshakes': handshakes, 'count': len(handshakes)})
+
+        except Exception as e:
+            self.log(f"Error scanning handshakes: {e}")
+            return json.dumps({'error': str(e), 'handshakes': []})
+
