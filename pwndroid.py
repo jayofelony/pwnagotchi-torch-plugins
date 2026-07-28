@@ -2,6 +2,7 @@ import json
 import logging
 import asyncio
 import websockets
+from flask import render_template_string, jsonify
 
 import pwnagotchi.plugins as plugins
 import pwnagotchi.ui.fonts as fonts
@@ -36,28 +37,40 @@ class PwnDroid(plugins.Plugin):
 
     async def start_fetching_location_data(self):
         gateway = self.options.get("gateway", "192.168.44.1")
-        uri = f"ws://{gateway}:8080"  # Replace with your WebSocket server URI
+        uri = f"ws://{gateway}:8080"
+        retry_count = 0
+        max_retries = 3
+
         while self.running:
             try:
                 async with websockets.connect(uri) as websocket:
                     self.websocket = websocket
+                    retry_count = 0
+                    logging.info("[PwnDroid] WebSocket connected successfully")
                     while self.running:
                         try:
                             self.message = await websocket.recv()
-                            if self.message != "":  # Check if the message is not empty
+                            if self.message != "":
                                 try:
                                     self.coordinates = json.loads(self.message)
-                                except json.JSONDecodeError as e:
-                                    await asyncio.sleep(5)  # Retry after 5 seconds
+                                except json.JSONDecodeError:
+                                    await asyncio.sleep(5)
                                     self.coordinates = {}
                             else:
                                 logging.error("Received empty message from WebSocket")
-                                await asyncio.sleep(5)  # Retry after 5 seconds
+                                await asyncio.sleep(5)
                         except websockets.ConnectionClosed:
                             break
             except Exception as e:
-                logging.error(f"Connection error: {e}")
-                await asyncio.sleep(5)  # Retry after 5 seconds
+                retry_count += 1
+                logging.error(f"[PwnDroid] Connection error (attempt {retry_count}/{max_retries}): {e}")
+
+                if retry_count >= max_retries:
+                    logging.error(f"[PwnDroid] Failed to connect after {max_retries} attempts. WebSocket connection disabled.")
+                    await self.close_websocket()
+                    return
+
+                await asyncio.sleep(5)
 
     async def close_websocket(self):
         if self.websocket:
@@ -203,10 +216,28 @@ class PwnDroid(plugins.Plugin):
 
     def on_webhook(self, path, request):
         """
-        Handle webhook requests. Expose handshakes data via /plugins/pwndroid/handshakes
+        Handle webhook requests. Expose handshakes data via web UI
         """
-        if path.strip('/') == 'handshakes':
-            return self._get_handshakes_json()
+        from flask import send_file, abort
+        clean_path = path.lstrip("/") if path else ""
+
+        if not clean_path or clean_path == 'handshakes':
+            handshakes_json = json.loads(self._get_handshakes_json())
+            return render_template_string(HANDSHAKES_TEMPLATE, handshakes=handshakes_json.get('handshakes', []))
+
+        if clean_path == 'handshakes.json':
+            return jsonify(json.loads(self._get_handshakes_json()))
+
+        if clean_path.startswith('download/'):
+            file_path = clean_path.replace('download/', '', 1)
+            from pathlib import Path
+            try:
+                full_path = Path(file_path)
+                if full_path.exists() and full_path.is_file():
+                    return send_file(str(full_path), as_attachment=True)
+            except Exception as e:
+                logging.error(f"[PwnDroid] Download error: {e}")
+                abort(404)
 
         return "OK"
 
@@ -217,22 +248,33 @@ class PwnDroid(plugins.Plugin):
         import json
         import os
         from pathlib import Path
+        from datetime import datetime
 
         handshakes = []
 
         # Look for PCAP files - they're typically stored in the pwd directory
-        pwd_dir = Path(self.agent.pwn.path) if hasattr(self.agent, 'pwn') else Path('/etc/pwnagotchi/handshakes')
+        try:
+            pwd_dir = Path(self.agent.pwn.path) if hasattr(self, 'agent') and hasattr(self.agent, 'pwn') else Path('/etc/pwnagotchi/handshakes')
+        except Exception:
+            pwd_dir = Path('/etc/pwnagotchi/handshakes')
 
         try:
+            if not pwd_dir.exists():
+                logging.warning(f"[PwnDroid] Handshakes directory not found: {pwd_dir}")
+                return json.dumps({'handshakes': [], 'count': 0})
+
             # Search for .pcap files and their corresponding .gps.json files
             for pcap_file in pwd_dir.glob('**/*.pcap'):
                 try:
                     gps_file = pcap_file.with_suffix('.gps.json')
+                    ctime = pcap_file.stat().st_ctime
+                    created_date = datetime.fromtimestamp(ctime).strftime('%Y-%m-%d %H:%M:%S')
 
                     handshake_info = {
                         'name': pcap_file.stem,
                         'pcap_path': str(pcap_file),
-                        'created': pcap_file.stat().st_ctime,
+                        'created': created_date,
+                        'created_ts': ctime,
                         'size': pcap_file.stat().st_size,
                         'gps': None
                     }
@@ -248,14 +290,107 @@ class PwnDroid(plugins.Plugin):
                     handshakes.append(handshake_info)
 
                 except Exception as e:
-                    self.log(f"Error processing {pcap_file}: {e}")
+                    logging.error(f"[PwnDroid] Error processing {pcap_file}: {e}")
 
             # Sort by creation time, newest first
-            handshakes.sort(key=lambda x: x['created'], reverse=True)
+            handshakes.sort(key=lambda x: x['created_ts'], reverse=True)
 
             return json.dumps({'handshakes': handshakes, 'count': len(handshakes)})
 
         except Exception as e:
-            self.log(f"Error scanning handshakes: {e}")
+            logging.error(f"[PwnDroid] Error scanning handshakes: {e}")
             return json.dumps({'error': str(e), 'handshakes': []})
+
+
+HANDSHAKES_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PwnDroid Handshakes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { margin-bottom: 20px; }
+        .toolbar { background: #2a2a2a; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+        .toolbar button { background: #0f0; color: #000; border: none; padding: 8px 15px; border-radius: 3px; cursor: pointer; font-weight: bold; }
+        .toolbar button:hover { background: #0d0; }
+        .toolbar button:disabled { background: #666; cursor: not-allowed; }
+        .toolbar label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .handshake { background: #2a2a2a; border: 1px solid #444; border-radius: 5px; padding: 15px; margin-bottom: 15px; display: flex; gap: 15px; }
+        .handshake input[type="checkbox"] { margin-top: 2px; cursor: pointer; }
+        .handshake-content { flex: 1; }
+        .handshake h3 { color: #0f0; margin-bottom: 10px; }
+        .handshake h3 a { color: #0f0; text-decoration: none; }
+        .handshake h3 a:hover { text-decoration: underline; }
+        .info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; }
+        .gps { background: #1a1a1a; padding: 10px; border-radius: 3px; margin-top: 10px; border-left: 3px solid #0f0; }
+        .gps h4 { color: #0f0; margin-bottom: 5px; font-size: 12px; }
+        .empty { text-align: center; padding: 40px; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛰️ PwnDroid Handshakes</h1>
+        {% if handshakes %}
+            <div class="toolbar">
+                <label><input type="checkbox" id="selectAll"> Select All</label>
+                <button id="downloadBtn" onclick="downloadSelected()" disabled>📥 Download Selected</button>
+            </div>
+            <form id="handshakesForm">
+                {% for handshake in handshakes %}
+                <div class="handshake">
+                    <input type="checkbox" class="handshake-checkbox" value="{{ handshake.pcap_path }}">
+                    <div class="handshake-content">
+                        <h3><a href="/plugins/pwndroid/download/{{ handshake.pcap_path | urlencode }}" download>📄 {{ handshake.name }}.pcap</a></h3>
+                        <div class="info">
+                            <div><strong>Size:</strong> {{ (handshake.size / 1024) | int }} KB</div>
+                            <div><strong>Created:</strong> {{ handshake.created }}</div>
+                        </div>
+                        {% if handshake.gps %}
+                        <div class="gps">
+                            <h4>📍 GPS Data: Lat {{ handshake.gps.Latitude | round(5) }}, Lon {{ handshake.gps.Longitude | round(5) }}, Alt {{ handshake.gps.Altitude | round(1) }}m</h4>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </form>
+            <script>
+                const selectAllCheckbox = document.getElementById('selectAll');
+                const checkboxes = document.querySelectorAll('.handshake-checkbox');
+                const downloadBtn = document.getElementById('downloadBtn');
+
+                selectAllCheckbox.addEventListener('change', function() {
+                    checkboxes.forEach(cb => cb.checked = this.checked);
+                    updateDownloadBtn();
+                });
+
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', updateDownloadBtn);
+                });
+
+                function updateDownloadBtn() {
+                    const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                    downloadBtn.disabled = !anyChecked;
+                }
+
+                function downloadSelected() {
+                    const selected = Array.from(checkboxes).filter(cb => cb.checked);
+                    selected.forEach(cb => {
+                        window.location.href = '/plugins/pwndroid/download/' + encodeURIComponent(cb.value);
+                    });
+                }
+            </script>
+        {% else %}
+            <div class="empty">
+                <p>No handshakes found</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
+"""
 
