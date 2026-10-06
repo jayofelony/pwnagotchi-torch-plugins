@@ -68,7 +68,7 @@ TEMPLATE = """
 
 class HandshakesDL(plugins.Plugin):
     __author__ = 'me@sayakb.com'
-    __version__ = '0.2.1'
+    __version__ = '0.2.2'
     __license__ = 'GPL3'
     __description__ = 'Download handshake captures from web-ui.'
 
@@ -86,15 +86,18 @@ class HandshakesDL(plugins.Plugin):
         if not self.ready:
             return "Plugin not ready"
 
+        handshake_dir = self.config['bettercap']['handshakes']
+
         if path == "/" or not path:
-            handshakes = glob.glob(os.path.join(self.config['bettercap']['handshakes'], "*.pcap"))
-            handshakes = [os.path.basename(path)[:-5] for path in handshakes]
+            # bettercap now writes .pcapng; keep .pcap for older captures.
+            files = glob.glob(os.path.join(handshake_dir, "*.pcapng"))
+            files += glob.glob(os.path.join(handshake_dir, "*.pcap"))
+            handshakes = sorted(os.path.basename(f) for f in files)
             return render_template_string(TEMPLATE, title="Handshakes | " + pwnagotchi.name(), handshakes=handshakes)
 
         else:
-            dir = self.config['bettercap']['handshakes']
             try:
-                logging.info(f"[HandshakesDL] serving {dir}/{path}.pcap")
-                return send_from_directory(dir, path+'.pcap', as_attachment=True)
+                logging.info(f"[HandshakesDL] serving {handshake_dir}/{path}")
+                return send_from_directory(handshake_dir, path, as_attachment=True)
             except FileNotFoundError:
                 abort(404)
