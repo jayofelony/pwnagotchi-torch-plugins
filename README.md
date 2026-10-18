@@ -38,6 +38,8 @@ Add the following line to your `/etc/pwnagotchi/config.toml`
 
 ```TOML
 main.plugins.internet-connection.enabled = true
+main.plugins.internet-connection.www_y_coord = 0
+main.plugins.internet-connection.www_x_coord = 85
 ```
 
 # Memtemp-Plus
