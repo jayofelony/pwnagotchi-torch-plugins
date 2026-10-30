@@ -26,7 +26,7 @@ def _first(d, *keys):
 
 class PwnDroid(plugins.Plugin):
     __author__ = "Jayofelony"
-    __version__ = "1.2.0"
+    __version__ = "1.3.0"
     __license__ = "GPL3"
     __description__ = (
         "Companion plugin for the PwnDroid Android app: receives phone GPS over a local "
