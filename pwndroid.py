@@ -1,7 +1,11 @@
 import json
 import logging
 import asyncio
+import fcntl
+import ipaddress
 import os
+import socket
+import struct
 import threading
 
 import websockets
@@ -22,6 +26,63 @@ def _first(d, *keys):
         if v:
             return v
     return None
+
+
+SIOCGIFADDR = 0x8915
+SIOCGIFNETMASK = 0x891B
+
+
+def _route_gateway(iface):
+    """Gateway of the first route through `iface` in /proc/net/route, or None."""
+    try:
+        with open("/proc/net/route") as fp:
+            next(fp, None)  # header
+            for line in fp:
+                fields = line.split()
+                if len(fields) < 4 or fields[0] != iface:
+                    continue
+                flags = int(fields[3], 16)
+                if not flags & 0x2:  # RTF_GATEWAY
+                    continue
+                gw = socket.inet_ntoa(struct.pack("<L", int(fields[2], 16)))
+                if gw != "0.0.0.0":
+                    return gw
+    except (OSError, ValueError):
+        pass
+    return None
+
+
+def _iface_ipv4(iface, request):
+    """IPv4 address (SIOCGIFADDR) or netmask (SIOCGIFNETMASK) of `iface`, or None."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        packed = struct.pack("256s", iface[:15].encode())
+        return socket.inet_ntoa(fcntl.ioctl(s.fileno(), request, packed)[20:24])
+    except OSError:
+        return None
+    finally:
+        s.close()
+
+
+def detect_phone_ip(iface="bnep0"):
+    """
+    The phone's address on the Bluetooth PAN. The phone is the NAP, so it is the gateway
+    of `iface`. Without a gateway route, assume the first host of the interface's subnet
+    (Android's Bluetooth tether hands out 192.168.44.0/24 with the phone on .1).
+    """
+    gw = _route_gateway(iface)
+    if gw:
+        return gw
+    addr = _iface_ipv4(iface, SIOCGIFADDR)
+    if not addr:
+        return None
+    mask = _iface_ipv4(iface, SIOCGIFNETMASK) or "255.255.255.0"
+    try:
+        net = ipaddress.IPv4Network("%s/%s" % (addr, mask), strict=False)
+        first = next(net.hosts())
+    except (ValueError, StopIteration):
+        return None
+    return str(first) if str(first) != addr else None
 
 
 class PwnDroid(plugins.Plugin):
@@ -90,14 +151,28 @@ class PwnDroid(plugins.Plugin):
             except Exception:
                 pass
 
+    def _phone_host(self):
+        """The phone's IP on the PAN interface, or None while the tether is down."""
+        return detect_phone_ip(self.options.get("interface", "bnep0"))
+
     async def _client(self):
         """Connect to the phone and stay connected, retrying forever with backoff."""
         backoff = 2
+        waiting_logged = False
         while self.running:
-            uri = "ws://%s:%d" % (
-                self.options.get("gateway", "192.168.44.1"),
-                int(self.options.get("port", 8080)),
-            )
+            host = self._phone_host()
+            if not host:
+                # No Bluetooth tether yet; poll quietly until bnep0 comes up.
+                if not waiting_logged:
+                    logging.info(
+                        "[PwnDroid] waiting for %s to come up",
+                        self.options.get("interface", "bnep0"),
+                    )
+                    waiting_logged = True
+                await asyncio.sleep(5)
+                continue
+            waiting_logged = False
+            uri = "ws://%s:%d" % (host, int(self.options.get("port", 8080)))
             try:
                 async with websockets.connect(
                     uri, ping_interval=20, ping_timeout=20, close_timeout=5
